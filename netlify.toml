@@ -4,3 +4,18 @@
 [build]
   command   = "npm run build"
   publish   = ".next"
+
+# Explicitly route all Next.js server-rendered paths to the function.
+# Required because the server handler's export const config path routing
+# is sometimes not picked up when a .json manifest is also present.
+[[redirects]]
+  from   = "/_next/data/*"
+  to     = "/.netlify/functions/___netlify-server-handler"
+  status = 200
+  force  = true
+
+[[redirects]]
+  from   = "/api/*"
+  to     = "/.netlify/functions/___netlify-server-handler"
+  status = 200
+  force  = true
