@@ -7,6 +7,7 @@ import StepICP from "./components/StepICP";
 import StepStrategy from "./components/StepStrategy";
 import StepMessages from "./components/StepMessages";
 import { Loader, ErrorBox } from "./components/ui";
+import GoogleDriveExport from "./components/GoogleDriveExport";
 
 const STEPS = ["Input", "Research", "ICP & Personas", "Strategy", "Messages"];
 
@@ -154,14 +155,28 @@ export default function ColdOutreachApp() {
             <span className="text-[#4f8ef7] text-lg">◆</span>
             <span className="font-semibold text-[#e8e8f2] text-sm">Cold Outreach Intelligence</span>
           </div>
-          {step > 0 && (
-            <button
-              onClick={handleReset}
-              className="text-xs text-[#6060a0] hover:text-[#e8e8f2] border border-[#2a2a45] hover:border-[#4f8ef7] px-3 py-1.5 rounded-lg transition-colors"
-            >
-              + New Analysis
-            </button>
-          )}
+          <div className="flex items-center gap-2">
+            {step === 4 && messages && (
+              <GoogleDriveExport
+                input={input}
+                research={research}
+                icpData={icpData}
+                strategy={strategy}
+                messages={messages}
+                selectedPersona={selectedPersona}
+                selectedAngle={selectedAngle}
+                selectedOffer={selectedOffer}
+              />
+            )}
+            {step > 0 && (
+              <button
+                onClick={handleReset}
+                className="text-xs text-[#6060a0] hover:text-[#e8e8f2] border border-[#2a2a45] hover:border-[#4f8ef7] px-3 py-1.5 rounded-lg transition-colors"
+              >
+                + New Analysis
+              </button>
+            )}
+          </div>
         </div>
       </header>
 
