@@ -15,11 +15,29 @@ const maturityColor: Record<string, string> = {
 export default function StepResearch({ data, target, onNext, loading }: Props) {
   if (!data) return null;
   const { market_overview: mo, competitors = [], pain_points = [], desires = [],
-    objections = [], buying_triggers = [], market_opportunities = [], common_messaging = [] } = data;
+    objections = [], buying_triggers = [], market_opportunities = [], common_messaging = [],
+    _meta } = data;
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <SectionHeader title="Market Research" subtitle={`Intelligence report for: ${target}`} />
+      <div className="flex items-start justify-between gap-4">
+        <SectionHeader title="Market Research" subtitle={`Intelligence report for: ${target}`} />
+        {_meta?.sources?.length > 0 && (
+          <div className="shrink-0 flex flex-wrap gap-1.5 justify-end mt-1">
+            {_meta.live_research && (
+              <span className="flex items-center gap-1 text-xs bg-green-500/10 text-green-400 border border-green-500/20 rounded-full px-2.5 py-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse-soft" />
+                Live data
+              </span>
+            )}
+            {_meta.sources.map((s: string, i: number) => (
+              <span key={i} className="text-xs bg-[#0f0f1a] text-[#6060a0] border border-[#1e1e35] rounded-full px-2.5 py-1">
+                {s}
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* Market Overview */}
       <Card>
