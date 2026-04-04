@@ -2,8 +2,5 @@
   package = "@netlify/plugin-nextjs"
 
 [build]
-  command    = "npm run build"
-  publish    = ".next"
-
-[functions]
-  node_bundler = "nft"
+  command   = "npm run build"
+  publish   = ".next"

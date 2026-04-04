@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
 export const maxDuration = 120;
-export const runtime = "nodejs";
 
 function cleanJson(raw: string): string {
   return raw.replace(/```json\s*/g, "").replace(/```\s*/g, "").trim();
