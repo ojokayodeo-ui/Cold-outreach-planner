@@ -8,7 +8,7 @@ function cleanJson(raw: string): string {
 
 // ── Claude via direct fetch (no SDK) ─────────────────────────────────────────
 
-async function claude(prompt: string, maxTokens = 4000): Promise<string> {
+async function claude(prompt: string, maxTokens = 8000): Promise<string> {
   const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: {

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 export const maxDuration = 120;
 
-async function claude(prompt: string, maxTokens = 5000): Promise<string> {
+async function claude(prompt: string, maxTokens = 8000): Promise<string> {
   const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: {
