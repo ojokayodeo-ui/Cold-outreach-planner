@@ -6,7 +6,7 @@ function cleanJson(raw: string): string {
   return raw.replace(/```json\s*/g, "").replace(/```\s*/g, "").trim();
 }
 
-async function claude(prompt: string, maxTokens = 2500): Promise<string> {
+async function claude(prompt: string, maxTokens = 4000): Promise<string> {
   const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: {
@@ -15,11 +15,11 @@ async function claude(prompt: string, maxTokens = 2500): Promise<string> {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: "claude-haiku-4-5-20251001",
+      model: "claude-sonnet-4-6",
       max_tokens: maxTokens,
       messages: [{ role: "user", content: prompt }],
     }),
-    signal: AbortSignal.timeout(40000),
+    signal: AbortSignal.timeout(90000),
   });
   if (!res.ok) throw new Error(`Anthropic API error ${res.status}`);
   const data: any = await res.json();
@@ -41,7 +41,7 @@ async function perplexitySearch(query: string): Promise<string> {
         ],
         max_tokens: 1000,
       }),
-      signal: AbortSignal.timeout(8000),
+      signal: AbortSignal.timeout(20000),
     });
     if (!res.ok) return "";
     const data: any = await res.json();
@@ -62,7 +62,7 @@ async function searchLinkedInPeople(titles: string[], geography: string): Promis
     });
     const res = await fetch(`https://nubela.co/proxycurl/api/search/person?${params}`, {
       headers: { Authorization: `Bearer ${key}` },
-      signal: AbortSignal.timeout(6000),
+      signal: AbortSignal.timeout(12000),
     });
     if (!res.ok) return "";
     const data: any = await res.json();
