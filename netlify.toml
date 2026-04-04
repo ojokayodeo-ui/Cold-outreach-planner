@@ -5,6 +5,11 @@
   command   = "npm run build"
   publish   = ".next"
 
+# Extend function timeout for long-running AI API calls.
+# Requires Netlify Pro or higher for values above 10s.
+[functions."___netlify-server-handler"]
+  timeout = 60
+
 # Explicitly route all Next.js server-rendered paths to the function.
 # Required because the server handler's export const config path routing
 # is sometimes not picked up when a .json manifest is also present.
@@ -19,3 +24,4 @@
   to     = "/.netlify/functions/___netlify-server-handler"
   status = 200
   force  = true
+

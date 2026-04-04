@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 export const maxDuration = 120;
 
-async function claude(prompt: string, maxTokens = 5000): Promise<string> {
+async function claude(prompt: string, maxTokens = 3000): Promise<string> {
   const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: {
@@ -11,10 +11,11 @@ async function claude(prompt: string, maxTokens = 5000): Promise<string> {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: "claude-sonnet-4-6",
+      model: "claude-haiku-4-5-20251001",
       max_tokens: maxTokens,
       messages: [{ role: "user", content: prompt }],
     }),
+    signal: AbortSignal.timeout(40000),
   });
   if (!res.ok) throw new Error(`Anthropic API error ${res.status}`);
   const data: any = await res.json();

@@ -8,7 +8,7 @@ function cleanJson(raw: string): string {
 
 // ── Claude via direct fetch (no SDK) ─────────────────────────────────────────
 
-async function claude(prompt: string, maxTokens = 4000): Promise<string> {
+async function claude(prompt: string, maxTokens = 2500): Promise<string> {
   const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: {
@@ -17,10 +17,11 @@ async function claude(prompt: string, maxTokens = 4000): Promise<string> {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: "claude-sonnet-4-6",
+      model: "claude-haiku-4-5-20251001",
       max_tokens: maxTokens,
       messages: [{ role: "user", content: prompt }],
     }),
+    signal: AbortSignal.timeout(40000),
   });
   if (!res.ok) {
     const err = await res.text();
@@ -53,7 +54,7 @@ async function perplexitySearch(query: string): Promise<string> {
         ],
         max_tokens: 1500,
       }),
-      signal: AbortSignal.timeout(30000),
+      signal: AbortSignal.timeout(8000),
     });
     if (!res.ok) return "";
     const data: any = await res.json();
@@ -73,7 +74,7 @@ async function scrapeLinkedInCompany(url: string): Promise<string> {
       `https://nubela.co/proxycurl/api/linkedin/company?url=${encodeURIComponent(url)}`,
       {
         headers: { Authorization: `Bearer ${key}` },
-        signal: AbortSignal.timeout(15000),
+        signal: AbortSignal.timeout(6000),
       }
     );
     if (!res.ok) return "";
