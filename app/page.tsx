@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import StepInput from "./components/StepInput";
 import StepResearch from "./components/StepResearch";
 import StepICP from "./components/StepICP";
@@ -18,24 +18,45 @@ const LOADING_TEXT: Record<number, string> = {
   3: "Writing outreach sequences...",
 };
 
+const STORAGE_KEY = "cold-outreach-session";
+
+function loadSession() {
+  if (typeof window === "undefined") return {} as Record<string, any>;
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "{}") as Record<string, any>;
+  } catch {
+    return {} as Record<string, any>;
+  }
+}
+
 export default function ColdOutreachApp() {
-  const [step, setStep] = useState(0);
+  const [step, setStep] = useState<number>(() => loadSession().step ?? 0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Input
-  const [input, setInput] = useState({ target: "", context: "", geography: "Global" });
+  const [input, setInput] = useState(() => loadSession().input ?? { target: "", context: "", geography: "Global" });
 
   // Generated data
-  const [research, setResearch] = useState<any>(null);
-  const [icpData, setIcpData] = useState<any>(null);
-  const [strategy, setStrategy] = useState<any>(null);
-  const [messages, setMessages] = useState<any>(null);
+  const [research, setResearch] = useState<any>(() => loadSession().research ?? null);
+  const [icpData, setIcpData] = useState<any>(() => loadSession().icpData ?? null);
+  const [strategy, setStrategy] = useState<any>(() => loadSession().strategy ?? null);
+  const [messages, setMessages] = useState<any>(() => loadSession().messages ?? null);
 
   // Selections for messages
-  const [selectedPersona, setSelectedPersona] = useState(0);
-  const [selectedAngle, setSelectedAngle] = useState(0);
-  const [selectedOffer, setSelectedOffer] = useState(0);
+  const [selectedPersona, setSelectedPersona] = useState<number>(() => loadSession().selectedPersona ?? 0);
+  const [selectedAngle, setSelectedAngle] = useState<number>(() => loadSession().selectedAngle ?? 0);
+  const [selectedOffer, setSelectedOffer] = useState<number>(() => loadSession().selectedOffer ?? 0);
+
+  // Persist to localStorage whenever state changes
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({ step, input, research, icpData, strategy, messages, selectedPersona, selectedAngle, selectedOffer })
+    );
+  }, [step, input, research, icpData, strategy, messages, selectedPersona, selectedAngle, selectedOffer]);
+
 
   const handleInputChange = (k: string, v: string) =>
     setInput(prev => ({ ...prev, [k]: v }));
@@ -130,6 +151,7 @@ export default function ColdOutreachApp() {
   }
 
   function handleReset() {
+    localStorage.removeItem(STORAGE_KEY);
     setStep(0);
     setResearch(null);
     setIcpData(null);
