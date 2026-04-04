@@ -6,4 +6,4 @@
   publish    = ".next"
 
 [functions]
-  timeout = 60
+  node_bundler = "nft"
