@@ -1,9 +1,26 @@
-import Anthropic from "@anthropic-ai/sdk";
 import { NextRequest, NextResponse } from "next/server";
 
 export const maxDuration = 120;
+export const runtime = "nodejs";
 
-const client = new Anthropic();
+async function claude(prompt: string, maxTokens = 5000): Promise<string> {
+  const res = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "x-api-key": process.env.ANTHROPIC_API_KEY ?? "",
+      "anthropic-version": "2023-06-01",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "claude-sonnet-4-6",
+      max_tokens: maxTokens,
+      messages: [{ role: "user", content: prompt }],
+    }),
+  });
+  if (!res.ok) throw new Error(`Anthropic API error ${res.status}`);
+  const data: any = await res.json();
+  return data.content[0].text ?? "";
+}
 
 function cleanJson(raw: string): string {
   return raw
@@ -99,14 +116,7 @@ Return ONLY valid JSON — no markdown, no explanation.
 }`;
 
   try {
-    const response = await client.messages.create({
-      model: "claude-sonnet-4-6",
-      max_tokens: 5000,
-      messages: [{ role: "user", content: prompt }],
-    });
-
-    const raw =
-      response.content[0].type === "text" ? response.content[0].text : "";
+    const raw = await claude(prompt, 5000);
     const data = JSON.parse(cleanJson(raw));
     return NextResponse.json(data);
   } catch (err) {

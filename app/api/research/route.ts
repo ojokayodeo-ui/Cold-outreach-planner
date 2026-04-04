@@ -1,12 +1,34 @@
-import Anthropic from "@anthropic-ai/sdk";
 import { NextRequest, NextResponse } from "next/server";
 
 export const maxDuration = 120;
-
-const anthropic = new Anthropic();
+export const runtime = "nodejs";
 
 function cleanJson(raw: string): string {
   return raw.replace(/```json\s*/g, "").replace(/```\s*/g, "").trim();
+}
+
+// ── Claude via direct fetch (no SDK) ─────────────────────────────────────────
+
+async function claude(prompt: string, maxTokens = 4000): Promise<string> {
+  const res = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "x-api-key": process.env.ANTHROPIC_API_KEY ?? "",
+      "anthropic-version": "2023-06-01",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "claude-sonnet-4-6",
+      max_tokens: maxTokens,
+      messages: [{ role: "user", content: prompt }],
+    }),
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`Anthropic API error ${res.status}: ${err.slice(0, 200)}`);
+  }
+  const data: any = await res.json();
+  return data.content[0].text ?? "";
 }
 
 // ── Perplexity live search ────────────────────────────────────────────────────
@@ -14,7 +36,6 @@ function cleanJson(raw: string): string {
 async function perplexitySearch(query: string): Promise<string> {
   const key = process.env.PERPLEXITY_API_KEY;
   if (!key) return "";
-
   try {
     const res = await fetch("https://api.perplexity.ai/chat/completions", {
       method: "POST",
@@ -27,17 +48,14 @@ async function perplexitySearch(query: string): Promise<string> {
         messages: [
           {
             role: "system",
-            content:
-              "You are a B2B market research analyst. Return detailed, factual, cited findings. Include real company names, real statistics, and specific data points where available.",
+            content: "You are a B2B market research analyst. Return detailed, factual, cited findings with real company names and specific statistics.",
           },
           { role: "user", content: query },
         ],
         max_tokens: 1500,
-        return_citations: true,
       }),
       signal: AbortSignal.timeout(30000),
     });
-
     if (!res.ok) return "";
     const data: any = await res.json();
     return data.choices?.[0]?.message?.content ?? "";
@@ -51,10 +69,9 @@ async function perplexitySearch(query: string): Promise<string> {
 async function scrapeLinkedInCompany(url: string): Promise<string> {
   const key = process.env.PROXYCURL_API_KEY;
   if (!key || !url) return "";
-
   try {
     const res = await fetch(
-      `https://nubela.co/proxycurl/api/linkedin/company?url=${encodeURIComponent(url)}&categories=include&funding_data=include&extra=include`,
+      `https://nubela.co/proxycurl/api/linkedin/company?url=${encodeURIComponent(url)}`,
       {
         headers: { Authorization: `Bearer ${key}` },
         signal: AbortSignal.timeout(15000),
@@ -62,47 +79,31 @@ async function scrapeLinkedInCompany(url: string): Promise<string> {
     );
     if (!res.ok) return "";
     const d: any = await res.json();
-    const parts: string[] = [];
-    if (d.name) parts.push(`Company: ${d.name}`);
-    if (d.description) parts.push(`Description: ${String(d.description).slice(0, 500)}`);
-    if (d.industry) parts.push(`Industry: ${d.industry}`);
-    if (d.company_size_on_linkedin) parts.push(`Size: ${d.company_size_on_linkedin} employees`);
-    if (d.hq) parts.push(`HQ: ${[d.hq.city, d.hq.country].filter(Boolean).join(", ")}`);
-    if (d.specialities?.length) parts.push(`Specialties: ${d.specialities.slice(0, 6).join(", ")}`);
-    if (d.tagline) parts.push(`Tagline: ${d.tagline}`);
-    if (d.founded_on?.year) parts.push(`Founded: ${d.founded_on.year}`);
-    if (d.follower_count) parts.push(`LinkedIn followers: ${d.follower_count.toLocaleString()}`);
-    return parts.join("\n");
+    return [
+      d.name && `Company: ${d.name}`,
+      d.description && `Description: ${String(d.description).slice(0, 400)}`,
+      d.industry && `Industry: ${d.industry}`,
+      d.company_size_on_linkedin && `Size: ${d.company_size_on_linkedin} employees`,
+      d.hq && `HQ: ${[d.hq.city, d.hq.country].filter(Boolean).join(", ")}`,
+      d.specialities?.length && `Specialties: ${d.specialities.slice(0, 6).join(", ")}`,
+    ].filter(Boolean).join("\n");
   } catch {
     return "";
   }
 }
 
-// ── Well-known LinkedIn URLs for common sectors (fallback enrichment) ─────────
 const SECTOR_LINKEDIN: Record<string, string[]> = {
-  recruitment: [
-    "https://www.linkedin.com/company/hays",
-    "https://www.linkedin.com/company/michael-page",
-  ],
-  saas: [
-    "https://www.linkedin.com/company/hubspot",
-    "https://www.linkedin.com/company/salesforce",
-  ],
-  marketing: [
-    "https://www.linkedin.com/company/wpromote",
-    "https://www.linkedin.com/company/webfx",
-  ],
-  consulting: [
-    "https://www.linkedin.com/company/mckinsey",
-    "https://www.linkedin.com/company/bain-and-company",
-  ],
+  recruitment: ["https://www.linkedin.com/company/hays", "https://www.linkedin.com/company/michael-page"],
+  saas: ["https://www.linkedin.com/company/hubspot", "https://www.linkedin.com/company/salesforce"],
+  marketing: ["https://www.linkedin.com/company/wpromote", "https://www.linkedin.com/company/webfx"],
+  consulting: ["https://www.linkedin.com/company/mckinsey", "https://www.linkedin.com/company/bain-and-company"],
 };
 
 function detectSector(target: string): string {
   const t = target.toLowerCase();
   if (/recruit|staffing|talent/.test(t)) return "recruitment";
   if (/saas|software|tech/.test(t)) return "saas";
-  if (/marketing|agency|digital/.test(t)) return "marketing";
+  if (/market|agency|digital/.test(t)) return "marketing";
   if (/consult/.test(t)) return "consulting";
   return "";
 }
@@ -111,134 +112,96 @@ function detectSector(target: string): string {
 
 export async function POST(req: NextRequest) {
   const { target, context, geography } = await req.json();
-
   if (!target?.trim()) {
     return NextResponse.json({ error: "Target is required" }, { status: 400 });
   }
 
   const geo = geography && geography !== "Global" ? geography : "";
 
-  // 1. Fire all live research in parallel
+  // 1. Fire live searches in parallel
   const [marketSearch, competitorSearch, buyerSearch] = await Promise.all([
-    perplexitySearch(
-      `Market size, growth rate, key trends and recent news for the ${target} market${geo ? ` in ${geo}` : ""}. Include specific statistics, percentages and sources.`
-    ),
-    perplexitySearch(
-      `Top 4-5 companies and competitors in the ${target} space${geo ? ` in ${geo}` : ""}. For each: their positioning, pricing approach, strengths, weaknesses, and what they pitch to customers.`
-    ),
-    perplexitySearch(
-      `What are the biggest pain points, frustrations, and buying triggers for decision-makers in ${target} companies${geo ? ` in ${geo}` : ""}? What events make them look for new solutions? What objections do they raise to vendors?`
-    ),
+    perplexitySearch(`Market size, growth rate, key trends and recent news for the ${target} market${geo ? ` in ${geo}` : ""}. Include specific statistics and sources.`),
+    perplexitySearch(`Top 4-5 companies and competitors in the ${target} space${geo ? ` in ${geo}` : ""}. Their positioning, pricing, strengths and weaknesses.`),
+    perplexitySearch(`Biggest pain points, frustrations, and buying triggers for decision-makers in ${target}${geo ? ` in ${geo}` : ""}. What makes them open to new solutions?`),
   ]);
 
   // 2. Optionally enrich with LinkedIn company data
   const sector = detectSector(target);
   const linkedInUrls = SECTOR_LINKEDIN[sector] ?? [];
-  const linkedInData = await Promise.all(
-    linkedInUrls.slice(0, 2).map((url) => scrapeLinkedInCompany(url))
-  ).then((results) => results.filter(Boolean).join("\n\n---\n\n"));
+  const linkedInResults = await Promise.all(linkedInUrls.slice(0, 2).map(scrapeLinkedInCompany));
+  const linkedInData = linkedInResults.filter(Boolean).join("\n\n---\n\n");
 
-  // 3. Check if Perplexity is available — if not, note it in the prompt
   const hasLiveData = !!(marketSearch || competitorSearch || buyerSearch);
-  const liveDataBlock = hasLiveData
-    ? `
-=== LIVE MARKET RESEARCH (use these facts, statistics, and company names in your output) ===
 
+  const liveBlock = hasLiveData ? `
+=== LIVE MARKET RESEARCH (ground your output in these facts) ===
 [MARKET DATA]
 ${marketSearch || "Not available"}
 
 [COMPETITOR DATA]
 ${competitorSearch || "Not available"}
 
-[BUYER PSYCHOLOGY & TRIGGERS]
+[BUYER PSYCHOLOGY]
 ${buyerSearch || "Not available"}
-
-${linkedInData ? `[LINKEDIN COMPANY PROFILES]\n${linkedInData}` : ""}
-
+${linkedInData ? `\n[LINKEDIN COMPANY DATA]\n${linkedInData}` : ""}
 === END LIVE RESEARCH ===
-`
-    : "";
+` : "";
 
-  // 4. Claude synthesizes everything into structured JSON
+  // 3. Claude synthesizes into structured JSON
   const prompt = `You are a world-class B2B market research analyst.
 
-Synthesize the live research data below into a structured intelligence report for planning cold outreach campaigns.
+Synthesize the research below into a structured intelligence report for cold outreach campaigns.
 
-Target Market: "${target}"
-${context ? `Seller Context: "${context}"` : ""}
+Target: "${target}"
+${context ? `Seller context: "${context}"` : ""}
 ${geo ? `Geography: ${geo}` : ""}
-${liveDataBlock}
+${liveBlock}
 
-CRITICAL INSTRUCTIONS:
-${hasLiveData ? "- USE the live research data above — reference real companies, real statistics, real trends found there" : "- Use your training knowledge to produce the best possible research"}
-- Be SPECIFIC: use real company names, real percentages, real market dynamics
-- Pain points must reflect what real decision-makers in this market actually complain about
-- Competitors must be real players in this space (from live data or your knowledge)
-- Buying triggers must be specific events, not generic statements
+${hasLiveData ? "USE the live data above — reference real companies, real statistics, real trends." : "Use your training knowledge to produce the best possible research."}
+Be specific. Use real company names, real percentages, real market dynamics.
 
-Return ONLY valid JSON — no markdown fences, no explanation.
+Return ONLY valid JSON — no markdown fences.
 
 {
   "market_overview": {
-    "size": "Specific market size with source e.g. '$4.2B (IBISWorld 2024)'",
+    "size": "Specific size with source e.g. '$4.2B (IBISWorld 2024)'",
     "maturity": "emerging|growing|mature|declining",
-    "growth_rate": "e.g. 8.4% CAGR (2024-2029)",
-    "key_trends": ["Specific trend 1 with context", "Trend 2", "Trend 3", "Trend 4", "Trend 5"]
+    "growth_rate": "e.g. 8.4% CAGR",
+    "key_trends": ["Specific trend 1", "Trend 2", "Trend 3", "Trend 4", "Trend 5"]
   },
   "competitors": [
     {
       "name": "Real company name",
-      "positioning": "How they actually position themselves in the market",
-      "strengths": ["Specific strength 1", "Specific strength 2"],
-      "weaknesses": ["Specific weakness 1", "Specific weakness 2"],
-      "common_offer": "Their typical entry-point offer or pitch"
+      "positioning": "How they position themselves",
+      "strengths": ["strength1", "strength2"],
+      "weaknesses": ["weakness1", "weakness2"],
+      "common_offer": "Their typical pitch or entry-point offer"
     }
   ],
-  "pain_points": [
-    "Specific, realistic pain point decision-makers in this market face"
-  ],
-  "desires": [
-    "Core desire or aspiration"
-  ],
-  "objections": [
-    "Common objection they raise to vendors"
-  ],
-  "buying_triggers": [
-    "Specific event or signal that makes them open to buy NOW"
-  ],
-  "market_opportunities": [
-    "Gap or opportunity a new entrant could exploit"
-  ],
-  "common_messaging": [
-    "Overused message pattern saturating this market — avoid these"
-  ]
+  "pain_points": ["Specific pain point 1", "Pain point 2", "Pain point 3", "Pain point 4", "Pain point 5", "Pain point 6", "Pain point 7", "Pain point 8"],
+  "desires": ["Desire 1", "Desire 2", "Desire 3", "Desire 4", "Desire 5", "Desire 6"],
+  "objections": ["Objection 1", "Objection 2", "Objection 3", "Objection 4", "Objection 5"],
+  "buying_triggers": ["Trigger 1", "Trigger 2", "Trigger 3", "Trigger 4", "Trigger 5"],
+  "market_opportunities": ["Opportunity 1", "Opportunity 2", "Opportunity 3"],
+  "common_messaging": ["Overused pattern 1", "Pattern 2", "Pattern 3", "Pattern 4"]
 }`;
 
   try {
-    const response = await anthropic.messages.create({
-      model: "claude-sonnet-4-6",
-      max_tokens: 4000,
-      messages: [{ role: "user", content: prompt }],
-    });
-
-    const raw =
-      response.content[0].type === "text" ? response.content[0].text : "";
+    const raw = await claude(prompt, 4000);
     const data = JSON.parse(cleanJson(raw));
-
-    // Surface whether live data was used
     return NextResponse.json({
       ...data,
       _meta: {
         live_research: hasLiveData,
         linkedin_enriched: !!linkedInData,
-        sources: ["Perplexity Sonar Pro", hasLiveData ? "Live web" : "Claude training data", linkedInData ? "Proxycurl LinkedIn" : null].filter(Boolean),
+        sources: [
+          hasLiveData ? "Perplexity Sonar Pro" : "Claude training data",
+          linkedInData ? "Proxycurl LinkedIn" : null,
+        ].filter(Boolean),
       },
     });
-  } catch (err) {
-    console.error("Research generation failed:", err);
-    return NextResponse.json(
-      { error: "Failed to generate research report. Check your ANTHROPIC_API_KEY." },
-      { status: 500 }
-    );
+  } catch (err: any) {
+    console.error("Research failed:", err);
+    return NextResponse.json({ error: err.message ?? "Failed to generate research" }, { status: 500 });
   }
 }
