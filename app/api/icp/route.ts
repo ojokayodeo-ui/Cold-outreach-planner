@@ -19,7 +19,7 @@ async function claude(prompt: string, maxTokens = 4000): Promise<string> {
       max_tokens: maxTokens,
       messages: [{ role: "user", content: prompt }],
     }),
-    signal: AbortSignal.timeout(90000),
+    signal: AbortSignal.timeout(120000),
   });
   if (!res.ok) throw new Error(`Anthropic API error ${res.status}`);
   const data: any = await res.json();
