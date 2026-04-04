@@ -35,7 +35,9 @@ export default function ColdOutreachApp() {
   const [error, setError] = useState<string | null>(null);
 
   // Input
-  const [input, setInput] = useState(() => loadSession().input ?? { target: "", context: "", geography: "Global" });
+  const [input, setInput] = useState<{ target: string; context: string; geography: string }>(
+    () => loadSession().input ?? { target: "", context: "", geography: "Global" }
+  );
 
   // Generated data
   const [research, setResearch] = useState<any>(() => loadSession().research ?? null);
