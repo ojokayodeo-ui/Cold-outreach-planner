@@ -58,6 +58,7 @@ export default function StepStrategy({
     competitor_offers = [],
     competitor_messaging = [],
     addon_services = [],
+    outreach_math = null,
   } = data;
 
   return (
@@ -350,6 +351,123 @@ export default function StepStrategy({
               );
             })}
           </div>
+        </div>
+      )}
+
+      {/* Outreach Math */}
+      {outreach_math && (
+        <div>
+          <h3 className="text-sm font-semibold text-[#a0a0c0] uppercase tracking-wider mb-3">Outreach Volume Calculator</h3>
+
+          {/* Goal banner */}
+          <div className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-xl p-5 mb-4">
+            <div className="flex flex-wrap gap-6 items-center justify-between">
+              <div className="text-center">
+                <div className="text-3xl font-bold text-white">{outreach_math.goal_calls_per_week ?? 10}</div>
+                <div className="text-xs text-[#555555] mt-1">Calls / Week Goal</div>
+              </div>
+              <div className="text-[#333333] text-2xl font-light hidden md:block">÷</div>
+              <div className="text-center">
+                <div className="text-3xl font-bold text-blue-400">{outreach_math.close_rate_pct ?? 20}%</div>
+                <div className="text-xs text-[#555555] mt-1">Close Rate</div>
+              </div>
+              <div className="text-[#333333] text-2xl font-light hidden md:block">=</div>
+              <div className="text-center">
+                <div className="text-3xl font-bold text-purple-400">{outreach_math.positive_responses_needed ?? 50}</div>
+                <div className="text-xs text-[#555555] mt-1">Positive Responses Needed</div>
+              </div>
+              {outreach_math.close_rate_note && (
+                <p className="w-full text-xs text-[#555555] border-t border-[#1a1a1a] pt-3 mt-1">{outreach_math.close_rate_note}</p>
+              )}
+            </div>
+          </div>
+
+          {/* Per-channel breakdown */}
+          {outreach_math.channels?.length > 0 && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              {outreach_math.channels.map((ch: any, i: number) => (
+                <Card key={i} className="border-l-4 border-l-blue-500/40">
+                  <div className="flex items-center justify-between mb-3">
+                    <p className="font-semibold text-[#f0f0f0]">{ch.name}</p>
+                    <span className="text-xs bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded-full px-3 py-0.5">
+                      {ch.weekly_reach_needed?.toLocaleString()} / week
+                    </span>
+                  </div>
+                  {/* Conversion rate mini-funnel */}
+                  <div className="grid grid-cols-3 gap-2 mb-3">
+                    {ch.open_rate_pct != null && (
+                      <div className="bg-[#111111] rounded-lg p-2 text-center">
+                        <div className="text-base font-bold text-yellow-400">{ch.open_rate_pct}%</div>
+                        <div className="text-xs text-[#555555]">Open rate</div>
+                      </div>
+                    )}
+                    <div className="bg-[#111111] rounded-lg p-2 text-center">
+                      <div className="text-base font-bold text-orange-400">{ch.reply_rate_pct}%</div>
+                      <div className="text-xs text-[#555555]">Reply rate</div>
+                    </div>
+                    <div className="bg-[#111111] rounded-lg p-2 text-center">
+                      <div className="text-base font-bold text-green-400">{ch.positive_reply_pct}%</div>
+                      <div className="text-xs text-[#555555]">Positive</div>
+                    </div>
+                  </div>
+                  {ch.daily_reach_needed != null && (
+                    <div className="flex items-center justify-between text-xs mb-2">
+                      <span className="text-[#555555]">Daily volume needed</span>
+                      <span className="font-semibold text-[#f0f0f0]">{ch.daily_reach_needed?.toLocaleString()} contacts/day</span>
+                    </div>
+                  )}
+                  {ch.math_breakdown && (
+                    <div className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-lg px-3 py-2">
+                      <p className="text-xs text-[#555555]">↳ {ch.math_breakdown}</p>
+                    </div>
+                  )}
+                </Card>
+              ))}
+            </div>
+          )}
+
+          {/* Recommended mix */}
+          {outreach_math.recommended_mix && (
+            <div className="bg-green-500/5 border border-green-500/20 rounded-xl p-4 mb-4">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-xs font-semibold text-green-400 uppercase tracking-wider">Recommended Weekly Mix</span>
+                <span className="text-xs text-green-300 bg-green-500/10 border border-green-500/20 rounded-full px-2 py-0.5">
+                  {outreach_math.recommended_mix.total_calls_booked} calls from {outreach_math.recommended_mix.total_weekly_reach?.toLocaleString()} contacts
+                </span>
+              </div>
+              {outreach_math.recommended_mix.description && (
+                <p className="text-xs text-[#555555] mb-3">{outreach_math.recommended_mix.description}</p>
+              )}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {outreach_math.recommended_mix.allocation?.map((a: any, i: number) => (
+                  <div key={i} className="flex items-center justify-between bg-[#0a0a0a] rounded-lg px-4 py-3">
+                    <div>
+                      <p className="text-sm font-semibold text-[#f0f0f0]">{a.channel}</p>
+                      <p className="text-xs text-[#555555]">{a.weekly_volume?.toLocaleString()} contacts/week</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xl font-bold text-green-400">{a.expected_calls}</p>
+                      <p className="text-xs text-[#555555]">calls/week</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Assumptions */}
+          {outreach_math.assumptions?.length > 0 && (
+            <div className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-xl px-4 py-3">
+              <p className="text-xs font-semibold text-[#555555] uppercase tracking-wider mb-2">Assumptions</p>
+              <ul className="space-y-1">
+                {outreach_math.assumptions.map((a: string, i: number) => (
+                  <li key={i} className="text-xs text-[#555555] flex items-start gap-2">
+                    <span className="text-[#333333] mt-0.5">✓</span>{a}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       )}
 

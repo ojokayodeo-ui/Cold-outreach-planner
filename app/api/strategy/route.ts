@@ -155,10 +155,54 @@ Return ONLY valid JSON — no markdown, no explanation.
       "value_prop": "Why existing clients want this",
       "revenue_potential": "e.g. +£1,500/mo per client"
     }
-  ]
+  ],
+  "outreach_math": {
+    "goal_calls_per_week": 10,
+    "close_rate_pct": 20,
+    "close_rate_note": "20% of positive responses convert to a booked call",
+    "positive_responses_needed": 50,
+    "channels": [
+      {
+        "name": "Cold Email",
+        "open_rate_pct": 28,
+        "reply_rate_pct": 4,
+        "positive_reply_pct": 35,
+        "effective_rate_pct": 0.28,
+        "weekly_reach_needed": 3572,
+        "daily_reach_needed": 510,
+        "math_breakdown": "50 positive responses ÷ 35% positive rate = 143 replies needed ÷ 4% reply rate = 3,572 emails/week"
+      },
+      {
+        "name": "LinkedIn Outreach",
+        "open_rate_pct": 60,
+        "reply_rate_pct": 10,
+        "positive_reply_pct": 45,
+        "effective_rate_pct": 0.9,
+        "weekly_reach_needed": 1111,
+        "daily_reach_needed": 159,
+        "math_breakdown": "50 positive responses ÷ 45% positive rate = 112 replies needed ÷ 10% reply rate = 1,112 connection requests/week"
+      }
+    ],
+    "recommended_mix": {
+      "description": "Split effort across channels for best results",
+      "allocation": [
+        { "channel": "Cold Email", "weekly_volume": 2000, "expected_calls": 6 },
+        { "channel": "LinkedIn", "weekly_volume": 500, "expected_calls": 4 }
+      ],
+      "total_weekly_reach": 2500,
+      "total_calls_booked": 10
+    },
+    "assumptions": [
+      "Personalised, research-backed outreach (not spray-and-pray)",
+      "Targeted list with verified decision-maker contacts",
+      "Follow-up sequence of 3–5 touches per prospect",
+      "Compelling offer with clear value proposition"
+    ]
+  }
 }
 
-Generate 5 angles (mix of types), 3 offers, 2 lead magnets, all 5 funnel stages, 3 competitor offer profiles, 3 competitor messaging examples, 3 add-on services.`;
+Generate 5 angles (mix of types), 3 offers, 2 lead magnets, all 5 funnel stages, 3 competitor offer profiles, 3 competitor messaging examples, 3 add-on services.
+For outreach_math: use REALISTIC conversion rates for THIS specific market (${icp?.industry ?? "B2B"} / ${icp?.sub_niche ?? ""}). Adjust open rates, reply rates, and positive response rates based on the industry norms, persona seniority, and outreach channel. Recalculate all numbers accordingly — do NOT use the placeholder numbers above.`;
 
   try {
     const raw = await claude(prompt);
