@@ -6,9 +6,7 @@ function cleanJson(raw: string): string {
   return raw.replace(/```json\s*/g, "").replace(/```\s*/g, "").trim();
 }
 
-// ── Claude via direct fetch (no SDK) ─────────────────────────────────────────
-
-async function claude(prompt: string, maxTokens = 8000): Promise<string> {
+async function claude(prompt: string, maxTokens = 12000): Promise<string> {
   const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: {
@@ -30,9 +28,7 @@ async function claude(prompt: string, maxTokens = 8000): Promise<string> {
   return data.content[0].text ?? "";
 }
 
-// ── Perplexity live search ────────────────────────────────────────────────────
-
-async function perplexitySearch(query: string): Promise<string> {
+async function perplexitySearch(query: string, maxTokens = 1500): Promise<string> {
   const key = process.env.PERPLEXITY_API_KEY;
   if (!key) return "";
   try {
@@ -47,13 +43,13 @@ async function perplexitySearch(query: string): Promise<string> {
         messages: [
           {
             role: "system",
-            content: "You are a B2B market research analyst. Return detailed, factual, cited findings with real company names and specific statistics.",
+            content: "You are a B2B market research analyst. Return detailed, factual findings with real company names, real people, real URLs, and specific statistics.",
           },
           { role: "user", content: query },
         ],
-        max_tokens: 1500,
+        max_tokens: maxTokens,
       }),
-      signal: AbortSignal.timeout(20000),
+      signal: AbortSignal.timeout(25000),
     });
     if (!res.ok) return "";
     const data: any = await res.json();
@@ -62,8 +58,6 @@ async function perplexitySearch(query: string): Promise<string> {
     return "";
   }
 }
-
-// ── Proxycurl LinkedIn company scrape ────────────────────────────────────────
 
 async function scrapeLinkedInCompany(url: string): Promise<string> {
   const key = process.env.PROXYCURL_API_KEY;
@@ -107,8 +101,6 @@ function detectSector(target: string): string {
   return "";
 }
 
-// ── Main handler ──────────────────────────────────────────────────────────────
-
 export async function POST(req: NextRequest) {
   const { target, context, geography } = await req.json();
   if (!target?.trim()) {
@@ -117,14 +109,35 @@ export async function POST(req: NextRequest) {
 
   const geo = geography && geography !== "Global" ? geography : "";
 
-  // 1. Fire live searches in parallel
-  const [marketSearch, competitorSearch, buyerSearch] = await Promise.all([
-    perplexitySearch(`Market size, growth rate, key trends and recent news for the ${target} market${geo ? ` in ${geo}` : ""}. Include specific statistics and sources.`),
-    perplexitySearch(`Top 4-5 companies and competitors in the ${target} space${geo ? ` in ${geo}` : ""}. Their positioning, pricing, strengths and weaknesses.`),
-    perplexitySearch(`Biggest pain points, frustrations, and buying triggers for decision-makers in ${target}${geo ? ` in ${geo}` : ""}. What makes them open to new solutions?`),
+  // Fire all live searches in parallel
+  const [
+    marketSearch,
+    competitorSearch,
+    buyerSearch,
+    competitorProfileSearch,
+    founderSearch,
+  ] = await Promise.all([
+    perplexitySearch(
+      `Market size, growth rate, key trends and recent news for the ${target} market${geo ? ` in ${geo}` : ""}. Include specific statistics and sources.`
+    ),
+    perplexitySearch(
+      `List 10 specific real companies competing in the ${target} space${geo ? ` in ${geo}` : ""}. For each: company name, website URL, year founded, approximate size, their main service/product offer, and their pricing model or pricing range.`,
+      2000
+    ),
+    perplexitySearch(
+      `Biggest pain points, frustrations, and buying triggers for decision-makers in ${target}${geo ? ` in ${geo}` : ""}. What makes them open to new solutions?`
+    ),
+    perplexitySearch(
+      `For the top competitors in the ${target} market${geo ? ` in ${geo}` : ""}: what is each company's unique selling proposition, what specific customer problems do they claim to solve, and what are the most common complaints or shortcomings customers report about them? Include LinkedIn company page URLs where known.`,
+      2000
+    ),
+    perplexitySearch(
+      `Who are the founders, owners, or key leaders of the top companies in the ${target} market${geo ? ` in ${geo}` : ""}? Include their names, LinkedIn profile URLs, their professional background, and which online communities or platforms they are active on.`,
+      2000
+    ),
   ]);
 
-  // 2. Optionally enrich with LinkedIn company data
+  // LinkedIn company enrichment
   const sector = detectSector(target);
   const linkedInUrls = SECTOR_LINKEDIN[sector] ?? [];
   const linkedInResults = await Promise.all(linkedInUrls.slice(0, 2).map(scrapeLinkedInCompany));
@@ -132,32 +145,36 @@ export async function POST(req: NextRequest) {
 
   const hasLiveData = !!(marketSearch || competitorSearch || buyerSearch);
 
-  const liveBlock = hasLiveData ? `
-=== LIVE MARKET RESEARCH (ground your output in these facts) ===
+  const liveBlock = `
+=== LIVE MARKET RESEARCH ===
 [MARKET DATA]
 ${marketSearch || "Not available"}
 
-[COMPETITOR DATA]
-${competitorSearch || "Not available"}
-
 [BUYER PSYCHOLOGY]
 ${buyerSearch || "Not available"}
-${linkedInData ? `\n[LINKEDIN COMPANY DATA]\n${linkedInData}` : ""}
+
+[COMPETITOR LIST — names, websites, years founded, offers, pricing]
+${competitorSearch || "Not available"}
+
+[COMPETITOR USPs, PROBLEMS THEY SOLVE, SHORTCOMINGS]
+${competitorProfileSearch || "Not available"}
+
+[FOUNDER & OWNER INTELLIGENCE]
+${founderSearch || "Not available"}
+
+${linkedInData ? `[LINKEDIN COMPANY DATA]\n${linkedInData}` : ""}
 === END LIVE RESEARCH ===
-` : "";
+`;
 
-  // 3. Claude synthesizes into structured JSON
-  const prompt = `You are a world-class B2B market research analyst.
+  const prompt = `You are a world-class B2B market research analyst and competitive intelligence specialist.
 
-Synthesize the research below into a structured intelligence report for cold outreach campaigns.
-
-Target: "${target}"
+Synthesize ALL the research below into a structured intelligence report for cold outreach campaigns targeting: "${target}"
 ${context ? `Seller context: "${context}"` : ""}
 ${geo ? `Geography: ${geo}` : ""}
+
 ${liveBlock}
 
-${hasLiveData ? "USE the live data above — reference real companies, real statistics, real trends." : "Use your training knowledge to produce the best possible research."}
-Be specific. Use real company names, real percentages, real market dynamics.
+USE real company names, real people, real URLs from the research above. Do not invent data — if something is unknown, mark it "Unknown" rather than fabricating.
 
 Return ONLY valid JSON — no markdown fences.
 
@@ -177,16 +194,38 @@ Return ONLY valid JSON — no markdown fences.
       "common_offer": "Their typical pitch or entry-point offer"
     }
   ],
+  "competitor_profiles": [
+    {
+      "name": "Real company name",
+      "website": "https://example.com",
+      "linkedin_url": "https://linkedin.com/company/example or Unknown",
+      "founded_year": "e.g. 2015 or Unknown",
+      "years_in_business": "e.g. ~9 years",
+      "company_size": "e.g. 11–50 employees",
+      "owner_name": "Founder/CEO name or Unknown",
+      "owner_linkedin": "https://linkedin.com/in/name or Unknown",
+      "owner_background": "2-sentence bio — previous roles, expertise",
+      "owner_online_presence": ["LinkedIn", "Twitter/X @handle", "specific podcast", "newsletter"],
+      "usp": "Their unique selling proposition in one clear sentence",
+      "core_offer": "What they actually sell — be specific about the service/product",
+      "pricing_model": "e.g. Retainer £2k–5k/mo, project-based, SaaS subscription, commission-based",
+      "needs_they_solve": ["Customer problem 1 they address", "Problem 2", "Problem 3"],
+      "shortcomings": ["Verified gap or complaint 1", "Shortcoming 2", "Shortcoming 3"],
+      "differentiator_opportunity": "The specific gap you can exploit against this competitor"
+    }
+  ],
   "pain_points": ["Specific pain point 1", "Pain point 2", "Pain point 3", "Pain point 4", "Pain point 5", "Pain point 6", "Pain point 7", "Pain point 8"],
   "desires": ["Desire 1", "Desire 2", "Desire 3", "Desire 4", "Desire 5", "Desire 6"],
   "objections": ["Objection 1", "Objection 2", "Objection 3", "Objection 4", "Objection 5"],
   "buying_triggers": ["Trigger 1", "Trigger 2", "Trigger 3", "Trigger 4", "Trigger 5"],
   "market_opportunities": ["Opportunity 1", "Opportunity 2", "Opportunity 3"],
   "common_messaging": ["Overused pattern 1", "Pattern 2", "Pattern 3", "Pattern 4"]
-}`;
+}
+
+Generate exactly 10 competitor_profiles. Include as many real names, URLs, and founders as the research supports — mark unknowns rather than fabricating.`;
 
   try {
-    const raw = await claude(prompt, 4000);
+    const raw = await claude(prompt);
     const data = JSON.parse(cleanJson(raw));
     return NextResponse.json({
       ...data,
