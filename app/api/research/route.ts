@@ -174,7 +174,7 @@ ${geo ? `Geography: ${geo}` : ""}
 
 ${liveBlock}
 
-USE real company names, real people, real URLs from the research above. Do not invent data — if something is unknown, mark it "Unknown" rather than fabricating.
+USE real company names, real people, real URLs from the research above. If something is unknown mark it "Unknown" — do not fabricate.
 
 Return ONLY valid JSON — no markdown fences.
 
@@ -183,38 +183,29 @@ Return ONLY valid JSON — no markdown fences.
     "size": "Specific size with source e.g. '$4.2B (IBISWorld 2024)'",
     "maturity": "emerging|growing|mature|declining",
     "growth_rate": "e.g. 8.4% CAGR",
-    "key_trends": ["Specific trend 1", "Trend 2", "Trend 3", "Trend 4", "Trend 5"]
+    "key_trends": ["Trend 1", "Trend 2", "Trend 3", "Trend 4", "Trend 5"]
   },
-  "competitors": [
-    {
-      "name": "Real company name",
-      "positioning": "How they position themselves",
-      "strengths": ["strength1", "strength2"],
-      "weaknesses": ["weakness1", "weakness2"],
-      "common_offer": "Their typical pitch or entry-point offer"
-    }
-  ],
   "competitor_profiles": [
     {
       "name": "Real company name",
-      "website": "https://example.com",
+      "website": "https://example.com or Unknown",
       "linkedin_url": "https://linkedin.com/company/example or Unknown",
       "founded_year": "e.g. 2015 or Unknown",
       "years_in_business": "e.g. ~9 years",
       "company_size": "e.g. 11–50 employees",
       "owner_name": "Founder/CEO name or Unknown",
       "owner_linkedin": "https://linkedin.com/in/name or Unknown",
-      "owner_background": "2-sentence bio — previous roles, expertise",
-      "owner_online_presence": ["LinkedIn", "Twitter/X @handle", "specific podcast", "newsletter"],
-      "usp": "Their unique selling proposition in one clear sentence",
-      "core_offer": "What they actually sell — be specific about the service/product",
-      "pricing_model": "e.g. Retainer £2k–5k/mo, project-based, SaaS subscription, commission-based",
-      "needs_they_solve": ["Customer problem 1 they address", "Problem 2", "Problem 3"],
-      "shortcomings": ["Verified gap or complaint 1", "Shortcoming 2", "Shortcoming 3"],
-      "differentiator_opportunity": "The specific gap you can exploit against this competitor"
+      "owner_background": "2-sentence bio — previous roles, expertise, or Unknown",
+      "owner_online_presence": ["LinkedIn", "Twitter/X @handle", "podcast name", "newsletter name"],
+      "usp": "Their unique selling proposition in one sentence",
+      "core_offer": "What they actually sell — specific service or product",
+      "pricing_model": "e.g. Retainer £2k–5k/mo, project-based, SaaS, commission",
+      "needs_they_solve": ["Problem 1 they address", "Problem 2", "Problem 3"],
+      "shortcomings": ["Customer complaint or gap 1", "Shortcoming 2", "Shortcoming 3"],
+      "differentiator_opportunity": "The specific gap you can exploit vs this competitor"
     }
   ],
-  "pain_points": ["Specific pain point 1", "Pain point 2", "Pain point 3", "Pain point 4", "Pain point 5", "Pain point 6", "Pain point 7", "Pain point 8"],
+  "pain_points": ["Pain 1", "Pain 2", "Pain 3", "Pain 4", "Pain 5", "Pain 6", "Pain 7", "Pain 8"],
   "desires": ["Desire 1", "Desire 2", "Desire 3", "Desire 4", "Desire 5", "Desire 6"],
   "objections": ["Objection 1", "Objection 2", "Objection 3", "Objection 4", "Objection 5"],
   "buying_triggers": ["Trigger 1", "Trigger 2", "Trigger 3", "Trigger 4", "Trigger 5"],
@@ -222,13 +213,24 @@ Return ONLY valid JSON — no markdown fences.
   "common_messaging": ["Overused pattern 1", "Pattern 2", "Pattern 3", "Pattern 4"]
 }
 
-Generate exactly 10 competitor_profiles. Include as many real names, URLs, and founders as the research supports — mark unknowns rather than fabricating.`;
+IMPORTANT: Generate exactly 10 objects in competitor_profiles. Use real data from the research above. This field is mandatory.`;
 
   try {
     const raw = await claude(prompt);
     const data = JSON.parse(cleanJson(raw));
+
+    // Derive simple competitors array from competitor_profiles for backward compat
+    const competitors = (data.competitor_profiles ?? []).map((p: any) => ({
+      name: p.name,
+      positioning: p.usp ?? "",
+      strengths: p.needs_they_solve?.slice(0, 2) ?? [],
+      weaknesses: p.shortcomings?.slice(0, 2) ?? [],
+      common_offer: p.core_offer ?? "",
+    }));
+
     return NextResponse.json({
       ...data,
+      competitors,
       _meta: {
         live_research: hasLiveData,
         linkedin_enriched: !!linkedInData,
