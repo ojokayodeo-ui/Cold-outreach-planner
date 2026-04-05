@@ -29,12 +29,36 @@ const frictionBadge: Record<string, string> = {
   high: "text-red-400 bg-red-500/10 border-red-500/30",
 };
 
+const funnelStageColors: Record<string, { bg: string; text: string; border: string; num: string }> = {
+  awareness:    { bg: "bg-blue-500/10",   text: "text-blue-300",   border: "border-blue-500/30",   num: "bg-blue-500/20 text-blue-300" },
+  interest:     { bg: "bg-purple-500/10", text: "text-purple-300", border: "border-purple-500/30", num: "bg-purple-500/20 text-purple-300" },
+  consideration:{ bg: "bg-yellow-500/10", text: "text-yellow-300", border: "border-yellow-500/30", num: "bg-yellow-500/20 text-yellow-300" },
+  intent:       { bg: "bg-orange-500/10", text: "text-orange-300", border: "border-orange-500/30", num: "bg-orange-500/20 text-orange-300" },
+  conversion:   { bg: "bg-green-500/10",  text: "text-green-300",  border: "border-green-500/30",  num: "bg-green-500/20 text-green-300" },
+};
+
+const whenToOfferBadge: Record<string, string> = {
+  "after close":     "text-green-400 bg-green-500/10 border-green-500/30",
+  "during discovery":"text-blue-400 bg-blue-500/10 border-blue-500/30",
+  "at renewal":      "text-purple-400 bg-purple-500/10 border-purple-500/30",
+  "mid-project":     "text-yellow-400 bg-yellow-500/10 border-yellow-500/30",
+};
+
 export default function StepStrategy({
   data, personas, selectedPersona, selectedAngle, selectedOffer,
   onSelectPersona, onSelectAngle, onSelectOffer, onNext, loading,
 }: Props) {
   if (!data) return null;
-  const { angles = [], recommended_angles = [], offers = [], lead_magnets = [] } = data;
+  const {
+    angles = [],
+    recommended_angles = [],
+    offers = [],
+    lead_magnets = [],
+    funnel = [],
+    competitor_offers = [],
+    competitor_messaging = [],
+    addon_services = [],
+  } = data;
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -148,6 +172,183 @@ export default function StepStrategy({
                 <p className="text-xs text-blue-400 mt-2">↳ {lm.delivery}</p>
               </Card>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Acquisition Funnel */}
+      {funnel.length > 0 && (
+        <div>
+          <h3 className="text-sm font-semibold text-[#a0a0c0] uppercase tracking-wider mb-3">Acquisition Funnel</h3>
+          <div className="flex flex-col gap-3">
+            {funnel.map((stage: any, i: number) => {
+              const stageKey = (stage.stage ?? "").toLowerCase();
+              const colors = funnelStageColors[stageKey] ?? funnelStageColors.awareness;
+              return (
+                <div
+                  key={i}
+                  className={`flex gap-4 items-start rounded-xl border ${colors.border} ${colors.bg} p-4`}
+                >
+                  {/* Step number */}
+                  <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${colors.num}`}>
+                    {i + 1}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2 mb-2">
+                      <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${colors.border} ${colors.bg} ${colors.text} uppercase tracking-wide`}>
+                        {stage.stage}
+                      </span>
+                      {stage.objective && (
+                        <span className="text-xs text-[#6060a0]">{stage.objective}</span>
+                      )}
+                    </div>
+                    {stage.primary_message && (
+                      <p className="text-sm text-[#c0c0e0] mb-2">{stage.primary_message}</p>
+                    )}
+                    {stage.cta && (
+                      <p className="text-xs text-[#a0a0c0] mb-2">
+                        <span className="text-[#4a4a70]">CTA: </span>{stage.cta}
+                      </p>
+                    )}
+                    <div className="flex flex-wrap gap-3">
+                      {stage.channels?.length > 0 && (
+                        <div className="flex flex-wrap items-center gap-1">
+                          <span className="text-xs text-[#4a4a70] mr-1">Channels:</span>
+                          {stage.channels.map((ch: string, j: number) => (
+                            <Tag key={j} color="blue">{ch}</Tag>
+                          ))}
+                        </div>
+                      )}
+                      {stage.offers_at_stage?.length > 0 && (
+                        <div className="flex flex-wrap items-center gap-1">
+                          <span className="text-xs text-[#4a4a70] mr-1">Offers:</span>
+                          {stage.offers_at_stage.map((of: string, j: number) => (
+                            <Tag key={j} color="purple">{of}</Tag>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Competitor Offers */}
+      {competitor_offers.length > 0 && (
+        <div>
+          <h3 className="text-sm font-semibold text-[#a0a0c0] uppercase tracking-wider mb-3">Competitor Offers</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {competitor_offers.map((co: any, i: number) => (
+              <Card key={i} className="border-l-4 border-l-purple-500/50">
+                <p className="font-semibold text-[#e8e8f2] mb-3">{co.competitor_type}</p>
+                <div className="space-y-2 text-xs">
+                  {co.typical_offer && (
+                    <div>
+                      <span className="text-[#4a4a70]">Typical Offer: </span>
+                      <span className="text-[#a0a0c0]">{co.typical_offer}</span>
+                    </div>
+                  )}
+                  {co.pricing_model && (
+                    <div>
+                      <span className="text-[#4a4a70]">Pricing Model: </span>
+                      <span className="text-[#a0a0c0]">{co.pricing_model}</span>
+                    </div>
+                  )}
+                  {co.messaging_angle && (
+                    <div>
+                      <span className="text-[#4a4a70]">Messaging Angle: </span>
+                      <span className="text-[#a0a0c0]">{co.messaging_angle}</span>
+                    </div>
+                  )}
+                  {co.weakness && (
+                    <div className="mt-3 bg-green-500/10 border border-green-500/20 rounded-lg px-3 py-2">
+                      <span className="text-green-400 font-semibold">Opportunity: </span>
+                      <span className="text-green-300">{co.weakness}</span>
+                    </div>
+                  )}
+                </div>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Competitor Messaging */}
+      {competitor_messaging.length > 0 && (
+        <div>
+          <h3 className="text-sm font-semibold text-[#a0a0c0] uppercase tracking-wider mb-3">Competitor Messaging</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {competitor_messaging.map((cm: any, i: number) => (
+              <Card key={i}>
+                {cm.message_type && (
+                  <div className="mb-3">
+                    <Tag color="red">{cm.message_type}</Tag>
+                  </div>
+                )}
+                {cm.competitor_copy && (
+                  <div className="bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2 mb-3">
+                    <p className="text-xs text-red-300 italic">"{cm.competitor_copy}"</p>
+                  </div>
+                )}
+                {cm.why_it_underperforms && (
+                  <div className="mb-3 text-xs">
+                    <span className="text-[#4a4a70]">Why it underperforms: </span>
+                    <span className="text-[#a0a0c0]">{cm.why_it_underperforms}</span>
+                  </div>
+                )}
+                {cm.your_alternative && (
+                  <div className="bg-green-500/10 border border-green-500/20 rounded-lg px-3 py-2">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <p className="text-xs text-green-400 font-semibold mb-1">Your Alternative</p>
+                        <p className="text-xs text-green-300 italic">"{cm.your_alternative}"</p>
+                      </div>
+                      <CopyButton text={cm.your_alternative} />
+                    </div>
+                  </div>
+                )}
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Add-on Services */}
+      {addon_services.length > 0 && (
+        <div>
+          <h3 className="text-sm font-semibold text-[#a0a0c0] uppercase tracking-wider mb-3">Add-on Services</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {addon_services.map((as: any, i: number) => {
+              const whenKey = (as.when_to_offer ?? "").toLowerCase();
+              const whenStyle = whenToOfferBadge[whenKey] ?? "text-blue-400 bg-blue-500/10 border-blue-500/30";
+              return (
+                <Card key={i}>
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="font-semibold text-[#e8e8f2]">{as.name}</p>
+                  </div>
+                  {as.when_to_offer && (
+                    <span className={`inline-block text-xs px-2 py-0.5 rounded-full border mb-3 ${whenStyle}`}>
+                      {as.when_to_offer}
+                    </span>
+                  )}
+                  {as.description && (
+                    <p className="text-xs text-[#a0a0c0] mb-2">{as.description}</p>
+                  )}
+                  {as.value_prop && (
+                    <p className="text-xs text-[#6060a0] mb-3">{as.value_prop}</p>
+                  )}
+                  {as.revenue_potential && (
+                    <div className="bg-green-500/10 border border-green-500/20 rounded-lg px-3 py-2">
+                      <span className="text-xs text-green-400 font-semibold">Revenue Potential: </span>
+                      <span className="text-xs text-green-300">{as.revenue_potential}</span>
+                    </div>
+                  )}
+                </Card>
+              );
+            })}
           </div>
         </div>
       )}

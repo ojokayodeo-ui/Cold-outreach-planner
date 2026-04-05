@@ -212,21 +212,47 @@ export default function ColdOutreachApp() {
               {STEPS.map((s, i) => {
                 const done = i < step;
                 const active = i === step;
+                const hasData = [
+                  true,
+                  research !== null,
+                  icpData !== null,
+                  strategy !== null,
+                  messages !== null,
+                ][i];
+                const clickable = hasData && !active && !loading;
                 return (
                   <div key={i} className="flex items-center flex-1">
                     <div className="flex items-center gap-2 shrink-0">
-                      <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold border transition-colors ${
-                        done ? "bg-[#4f8ef7] border-[#4f8ef7] text-white"
-                          : active ? "border-[#4f8ef7] text-[#4f8ef7]"
-                          : "border-[#2a2a45] text-[#4a4a70]"
-                      }`}>
+                      <button
+                        onClick={() => clickable && setStep(i)}
+                        disabled={!clickable}
+                        className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold border transition-colors ${
+                          done
+                            ? clickable
+                              ? "bg-[#4f8ef7] border-[#4f8ef7] text-white hover:bg-[#3a7ae0] cursor-pointer"
+                              : "bg-[#4f8ef7] border-[#4f8ef7] text-white"
+                            : active
+                            ? "border-[#4f8ef7] text-[#4f8ef7]"
+                            : "border-[#2a2a45] text-[#4a4a70]"
+                        }`}
+                      >
                         {done ? "✓" : i + 1}
-                      </div>
-                      <span className={`text-xs font-medium hidden sm:block ${
-                        active ? "text-[#e8e8f2]" : done ? "text-[#6060a0]" : "text-[#4a4a70]"
-                      }`}>
+                      </button>
+                      <button
+                        onClick={() => clickable && setStep(i)}
+                        disabled={!clickable}
+                        className={`text-xs font-medium hidden sm:block transition-colors ${
+                          active
+                            ? "text-[#e8e8f2]"
+                            : done
+                            ? clickable
+                              ? "text-[#6060a0] hover:text-[#a0a0c0] cursor-pointer"
+                              : "text-[#6060a0]"
+                            : "text-[#4a4a70]"
+                        }`}
+                      >
                         {s}
-                      </span>
+                      </button>
                     </div>
                     {i < STEPS.length - 1 && (
                       <div className={`flex-1 h-px mx-3 ${done ? "bg-[#4f8ef7]/50" : "bg-[#1e1e35]"}`} />
