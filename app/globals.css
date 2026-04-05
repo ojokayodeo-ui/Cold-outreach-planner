@@ -2,19 +2,19 @@
 
 :root {
   color-scheme: dark;
-  --bg:       #080810;
-  --bg-card:  #0f0f1a;
-  --bg-hover: #141428;
-  --border:   #1e1e35;
-  --border-b: #2a2a45;
-  --text:     #e8e8f2;
-  --text-muted: #6060a0;
-  --blue:     #4f8ef7;
-  --purple:   #8b5cf6;
-  --green:    #22c55e;
-  --orange:   #f97316;
-  --red:      #ef4444;
-  --yellow:   #eab308;
+  --bg:       #000000;
+  --bg-card:  #0a0a0a;
+  --bg-hover: #111111;
+  --border:   #1a1a1a;
+  --border-b: #222222;
+  --text:     #f0f0f0;
+  --text-muted: #555555;
+  --blue:     #3b82f6;
+  --purple:   #7c3aed;
+  --green:    #16a34a;
+  --orange:   #ea580c;
+  --red:      #dc2626;
+  --yellow:   #ca8a04;
 }
 
 body {
@@ -27,8 +27,8 @@ body {
 /* Scrollbar */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #2a2a45; border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: #3a3a65; }
+::-webkit-scrollbar-thumb { background: #222222; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #333333; }
 
 /* Animations */
 @keyframes fade-in {
@@ -53,7 +53,7 @@ body {
 
 /* Skeleton shimmer */
 .skeleton {
-  background: linear-gradient(90deg, #0f0f1a 25%, #1a1a30 50%, #0f0f1a 75%);
+  background: linear-gradient(90deg, #0a0a0a 25%, #141414 50%, #0a0a0a 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
   border-radius: 6px;
@@ -85,6 +85,6 @@ body {
   border-bottom: 1px solid var(--border);
   font-size: 14px;
   line-height: 1.6;
-  color: #c0c0e0;
+  color: #d0d0d0;
 }
 .prose-list li:last-child { border-bottom: none; }
