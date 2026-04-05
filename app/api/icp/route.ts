@@ -48,31 +48,52 @@ async function perplexitySearch(query: string): Promise<string> {
   } catch { return ""; }
 }
 
-async function searchLinkedInPeople(titles: string[], geography: string): Promise<string> {
+// Fetch LinkedIn people by job titles and extract rich profile data
+async function searchLinkedInPeople(titles: string[], industry: string, geography: string, count = 5): Promise<string> {
   const key = process.env.PROXYCURL_API_KEY;
   if (!key) return "";
   try {
-    const country = /uk|united kingdom/i.test(geography) ? "GB" : "US";
+    const country = /uk|united kingdom/i.test(geography) ? "GB"
+      : /australia|aus/i.test(geography) ? "AU"
+      : /canada/i.test(geography) ? "CA"
+      : "US";
+
     const params = new URLSearchParams({
       country,
-      current_role_title: titles.slice(0, 2).join(" OR "),
+      current_role_title: titles.slice(0, 3).join(" OR "),
+      ...(industry ? { current_role_after_fuzz_title: industry } : {}),
       enrich_profile: "enrich",
-      page_size: "3",
+      page_size: String(count),
     });
+
     const res = await fetch(`https://nubela.co/proxycurl/api/search/person?${params}`, {
       headers: { Authorization: `Bearer ${key}` },
-      signal: AbortSignal.timeout(12000),
+      signal: AbortSignal.timeout(15000),
     });
     if (!res.ok) return "";
     const data: any = await res.json();
-    return (data.results ?? []).slice(0, 3).map((p: any) => {
+
+    return (data.results ?? []).slice(0, count).map((p: any) => {
       const pr = p.profile ?? {};
+      const recentExp = (pr.experiences ?? []).slice(0, 2).map((e: any) =>
+        [e.title, e.company, e.description && String(e.description).slice(0, 150)].filter(Boolean).join(" @ ")
+      );
+      const certifications = (pr.certifications ?? []).slice(0, 3).map((c: any) => c.name).filter(Boolean);
+      const groups = (pr.groups ?? []).slice(0, 4).map((g: any) => g.name).filter(Boolean);
+      const languages = (pr.languages ?? []).slice(0, 3).filter(Boolean);
+
       return [
-        pr.full_name && `Name: ${pr.full_name}`,
-        pr.occupation && `Role: ${pr.occupation}`,
-        pr.headline && `Headline: ${pr.headline}`,
-        pr.summary && `Summary: ${String(pr.summary).slice(0, 250)}`,
-        pr.skills?.length && `Skills: ${pr.skills.slice(0, 6).join(", ")}`,
+        pr.full_name      && `Name: ${pr.full_name}`,
+        pr.occupation     && `Role: ${pr.occupation}`,
+        pr.headline       && `Headline: ${pr.headline}`,
+        pr.summary        && `Summary: ${String(pr.summary).slice(0, 300)}`,
+        pr.city           && `Location: ${[pr.city, pr.country_full_name].filter(Boolean).join(", ")}`,
+        pr.skills?.length && `Skills: ${pr.skills.slice(0, 8).join(", ")}`,
+        recentExp.length  && `Recent experience: ${recentExp.join(" | ")}`,
+        certifications.length && `Certifications: ${certifications.join(", ")}`,
+        groups.length     && `LinkedIn groups: ${groups.join(", ")}`,
+        languages.length  && `Languages: ${languages.join(", ")}`,
+        pr.recommendations_count && `Recommendations: ${pr.recommendations_count}`,
       ].filter(Boolean).join("\n");
     }).join("\n\n---\n\n");
   } catch { return ""; }
@@ -84,19 +105,49 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Target is required" }, { status: 400 });
   }
 
-  const likelyTitles = ["Managing Director", "CEO", "Founder", "Head of Sales", "VP Sales"];
+  const geo = geography && geography !== "Global" ? geography : "";
 
-  const [icpSearch, realPeopleData] = await Promise.all([
-    perplexitySearch(`Give 3-5 specific real company examples matching this ICP: ${target}${geography && geography !== "Global" ? ` in ${geography}` : ""}. Include company name, size, what they do.`),
-    searchLinkedInPeople(likelyTitles, geography ?? ""),
+  // 1. Run Perplexity + job-title lookup in parallel
+  const [icpSearch, titlesSearch] = await Promise.all([
+    perplexitySearch(
+      `Give 4-5 specific real company examples matching this ICP: ${target}${geo ? ` in ${geo}` : ""}. Include company name, size, what they do, and revenue range.`
+    ),
+    perplexitySearch(
+      `What are the exact LinkedIn job titles of B2B decision-makers who buy ${target}? ` +
+      `List 8 specific titles (e.g. "Managing Director", "Head of Revenue Operations"). Return a plain comma-separated list only.`
+    ),
   ]);
+
+  // 2. Parse titles from Perplexity response or fall back to defaults
+  let titles: string[] = [];
+  if (titlesSearch) {
+    titles = titlesSearch
+      .split(/,|\n/)
+      .map((t: string) => t.replace(/^[\d.\-*•\s"]+|["]+$/g, "").trim())
+      .filter((t: string) => t.length > 3 && t.length < 60)
+      .slice(0, 8);
+  }
+  if (titles.length < 3) {
+    titles = ["Managing Director", "CEO", "Founder", "Head of Sales", "VP Sales", "Chief Revenue Officer", "Head of Growth", "Commercial Director"];
+  }
+
+  // 3. Run LinkedIn searches with real titles (two parallel searches for more variety)
+  const midpoint = Math.ceil(titles.length / 2);
+  const [linkedInBatch1, linkedInBatch2] = await Promise.all([
+    searchLinkedInPeople(titles.slice(0, midpoint), "", geo, 3),
+    searchLinkedInPeople(titles.slice(midpoint), "", geo, 3),
+  ]);
+  const realPeopleData = [linkedInBatch1, linkedInBatch2].filter(Boolean).join("\n\n===\n\n");
 
   const hasLiveData = !!(icpSearch || realPeopleData);
 
   const liveBlock = hasLiveData ? `
 === LIVE ICP INTELLIGENCE ===
-${icpSearch ? `[REAL COMPANY EXAMPLES]\n${icpSearch}` : ""}
-${realPeopleData ? `[REAL LINKEDIN DECISION-MAKER PROFILES — use their language and patterns for personas]\n${realPeopleData}` : ""}
+${icpSearch ? `[REAL COMPANY EXAMPLES FROM WEB]\n${icpSearch}` : ""}
+
+${titles.length ? `[REAL JOB TITLES USED FOR LINKEDIN SEARCH]\n${titles.join(", ")}` : ""}
+
+${realPeopleData ? `[REAL LINKEDIN DECISION-MAKER PROFILES — mirror their language, concerns, and patterns exactly in personas]\n\n${realPeopleData}` : ""}
 === END LIVE INTELLIGENCE ===
 ` : "";
 
@@ -114,14 +165,20 @@ Build a precise ICP and 3 detailed buyer personas for cold outreach.
 
 Target: "${target}"
 ${context ? `Seller: "${context}"` : ""}
-${geography && geography !== "Global" ? `Geography: ${geography}` : ""}
+${geo ? `Geography: ${geo}` : ""}
 ${researchSummary}
 ${liveBlock}
 
-${hasLiveData ? "USE the real LinkedIn profiles and company examples to make personas authentic." : ""}
-Persona quotes must sound like something a real person would say on a sales call.
-Pain points = EMOTIONAL (how it feels) + OPERATIONAL (what it costs).
-Watering holes must be SPECIFIC (e.g. 'Recruitment Brainfood newsletter').
+CRITICAL INSTRUCTIONS:
+${realPeopleData
+  ? `- You have REAL LinkedIn profiles above. Base the personas directly on these real people's language, job titles, skills, experience, and career patterns.
+- Mirror the exact vocabulary and tone they use in their headlines and summaries.
+- Their listed skills reveal what they care about — reflect this in goals and KPIs.
+- Their groups and certifications reveal their watering holes — use these directly.`
+  : "- No live LinkedIn data available. Use best knowledge to build authentic personas."}
+- Persona quotes must sound like something a real person in this role would say on a discovery call.
+- Pain points = EMOTIONAL (how it feels) + OPERATIONAL (what it costs in time/money/risk).
+- Watering holes must be SPECIFIC (e.g. 'Recruitment Brainfood newsletter', 'SaaStr Annual conference').
 
 Return ONLY valid JSON — no markdown.
 
@@ -145,6 +202,7 @@ Return ONLY valid JSON — no markdown.
       "id": "persona-1",
       "name": "Alex",
       "title": "Job title",
+      "linkedin_titles_matched": ["Title from real data if applicable"],
       "company_stage": "e.g. Established recruitment agency, 25 staff",
       "goals": ["Goal 1", "Goal 2", "Goal 3"],
       "kpis": ["KPI 1", "KPI 2"],
@@ -154,8 +212,9 @@ Return ONLY valid JSON — no markdown.
       "decision_process": "Detailed: who else involved, timeline, what triggers yes",
       "platforms": ["LinkedIn", "platform2"],
       "watering_holes": ["Specific community or newsletter", "Specific event or podcast"],
-      "daily_frustration": "One sentence: a specific frustration that makes them receptive",
-      "quote": "Something they'd genuinely say on a sales call — in their authentic voice"
+      "daily_frustration": "One sentence: a specific frustration that makes them receptive to outreach",
+      "quote": "Something they'd genuinely say on a sales call — in their authentic voice",
+      "skills_profile": ["Skill 1 from LinkedIn data", "Skill 2"]
     }
   ]
 }`;
@@ -168,9 +227,10 @@ Return ONLY valid JSON — no markdown.
       _meta: {
         live_research: hasLiveData,
         real_profiles_used: !!realPeopleData,
+        linkedin_titles_searched: titles,
         sources: [
           hasLiveData ? "Perplexity Sonar Pro" : null,
-          realPeopleData ? "Proxycurl LinkedIn People" : null,
+          realPeopleData ? "Proxycurl LinkedIn People Search (live profiles)" : null,
           "Claude claude-sonnet-4-6",
         ].filter(Boolean),
       },
