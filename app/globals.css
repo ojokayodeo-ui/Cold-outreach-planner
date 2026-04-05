@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
 :root {
+  color-scheme: dark;
   --bg:       #080810;
   --bg-card:  #0f0f1a;
   --bg-hover: #141428;
