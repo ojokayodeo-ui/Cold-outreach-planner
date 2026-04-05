@@ -154,14 +154,14 @@ Return ONLY valid JSON — no markdown.
       "decision_process": "Detailed: who else involved, timeline, what triggers yes",
       "platforms": ["LinkedIn", "platform2"],
       "watering_holes": ["Specific community or newsletter", "Specific event or podcast"],
-      "daily_frustration": "A paragraph: what their Monday morning feels like — specific frustrations that make them receptive",
+      "daily_frustration": "One sentence: a specific frustration that makes them receptive",
       "quote": "Something they'd genuinely say on a sales call — in their authentic voice"
     }
   ]
 }`;
 
   try {
-    const raw = await claude(prompt, 5000);
+    const raw = await claude(prompt);
     const data = JSON.parse(cleanJson(raw));
     return NextResponse.json({
       ...data,
