@@ -37,8 +37,8 @@ export default function ColdOutreachApp() {
   const [showProspect, setShowProspect] = useState(false);
 
   // Input
-  const [input, setInput] = useState<{ target: string; context: string; geography: string }>(
-    () => loadSession().input ?? { target: "", context: "", geography: "Global" }
+  const [input, setInput] = useState<{ target: string; context: string; geography: string; websiteUrl: string }>(
+    () => loadSession().input ?? { target: "", context: "", geography: "Global", websiteUrl: "" }
   );
 
   // Generated data
@@ -84,6 +84,7 @@ export default function ColdOutreachApp() {
         target: input.target,
         context: input.context,
         geography: input.geography,
+        websiteUrl: input.websiteUrl,
       });
       setResearch(data);
       setStep(1);
@@ -162,7 +163,7 @@ export default function ColdOutreachApp() {
     setStrategy(null);
     setMessages(null);
     setError(null);
-    setInput({ target: "", context: "", geography: "Global" });
+    setInput({ target: "", context: "", geography: "Global", websiteUrl: "" });
     setSelectedPersona(0);
     setSelectedAngle(0);
     setSelectedOffer(0);
