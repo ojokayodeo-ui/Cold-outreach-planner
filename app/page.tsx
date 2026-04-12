@@ -145,6 +145,8 @@ export default function ColdOutreachApp() {
         persona: icpData?.personas?.[pIdx],
         angle: strategy?.angles?.[aIdx],
         offer: strategy?.offers?.[oIdx],
+        companyName: research?.website_analysis?.company_name ?? "",
+        websiteUrl: input.websiteUrl ?? "",
       });
       setMessages(data);
       setStep(4);
@@ -172,6 +174,7 @@ export default function ColdOutreachApp() {
   const personas = icpData?.personas ?? [];
   const angles = strategy?.angles ?? [];
   const offers = strategy?.offers ?? [];
+  const companyName: string = research?.website_analysis?.company_name ?? "";
 
   return (
     <div className="min-h-screen bg-[#000000]">
@@ -347,6 +350,11 @@ export default function ColdOutreachApp() {
                 onRegenerate={() => generateMessages(selectedPersona, selectedAngle, selectedOffer)}
                 onReset={handleReset}
                 loading={loading}
+                research={research}
+                icpData={icpData}
+                strategy={strategy}
+                input={input}
+                companyName={companyName}
               />
             )}
           </>

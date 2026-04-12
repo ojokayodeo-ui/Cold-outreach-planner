@@ -36,15 +36,22 @@ export async function POST(req: NextRequest) {
     angle,
     offer,
     icp,
+    companyName,
+    websiteUrl,
   } = await req.json();
 
   if (!target?.trim()) {
     return NextResponse.json({ error: "Target is required" }, { status: 400 });
   }
 
+  const prospectLine = companyName
+    ? `\nPROSPECT COMPANY: "${companyName}"${websiteUrl ? ` (${websiteUrl})` : ""} — personalise every message to this specific company. Replace generic references with their company name, industry, or known details.`
+    : "";
+
   const prompt = `You are a master cold email copywriter who has generated $10M+ in pipeline for B2B companies.
 
 Write a complete outreach sequence for the following campaign. Every message must feel human, specific, and non-spammy. No corporate buzzwords. No "I hope this email finds you well."
+${prospectLine}
 
 CAMPAIGN BRIEF:
 - Target market: "${target}"
@@ -80,6 +87,7 @@ DELIVERABLES:
    - Write AS the seller (first person)
    - No attachments mentioned in early emails
    - Use {{first_name}} as the personalization placeholder
+   ${companyName ? `- Replace {{company_name}} with "${companyName}" where relevant` : ""}
 
 2. LINKEDIN CONNECTION REQUEST NOTE (under 300 characters, no hard sell)
 
