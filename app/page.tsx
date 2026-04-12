@@ -8,6 +8,7 @@ import StepStrategy from "./components/StepStrategy";
 import StepMessages from "./components/StepMessages";
 import { Loader, ErrorBox } from "./components/ui";
 import GoogleDriveExport from "./components/GoogleDriveExport";
+import ProspectReport from "./components/ProspectReport";
 
 const STEPS = ["Input", "Research", "ICP & Personas", "Strategy", "Messages"];
 
@@ -33,6 +34,7 @@ export default function ColdOutreachApp() {
   const [step, setStep] = useState<number>(() => loadSession().step ?? 0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showProspect, setShowProspect] = useState(false);
 
   // Input
   const [input, setInput] = useState<{ target: string; context: string; geography: string }>(
@@ -171,7 +173,14 @@ export default function ColdOutreachApp() {
   const offers = strategy?.offers ?? [];
 
   return (
-    <div className="min-h-screen bg-[#080810]">
+    <div className="min-h-screen bg-[#000000]">
+      {showProspect && (
+        <ProspectReport
+          sellerContext={input.context}
+          geography={input.geography}
+          onClose={() => setShowProspect(false)}
+        />
+      )}
       {/* Header */}
       <header className="sticky top-0 z-50 bg-[#080810]/90 backdrop-blur border-b border-[#1e1e35]">
         <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
@@ -192,6 +201,12 @@ export default function ColdOutreachApp() {
                 selectedOffer={selectedOffer}
               />
             )}
+            <button
+              onClick={() => setShowProspect(true)}
+              className="text-xs text-[#a0a0c0] hover:text-white border border-[#1a1a1a] hover:border-blue-500/50 bg-blue-500/5 hover:bg-blue-500/10 px-3 py-1.5 rounded-lg transition-colors"
+            >
+              🔍 Prospect Report
+            </button>
             {step > 0 && (
               <button
                 onClick={handleReset}
