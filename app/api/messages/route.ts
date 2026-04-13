@@ -29,16 +29,12 @@ function cleanJson(raw: string): string {
 }
 
 export async function POST(req: NextRequest) {
-  const {
-    target,
-    context,
-    persona,
-    angle,
-    offer,
-    icp,
-    companyName,
-    websiteUrl,
-  } = await req.json();
+  let target: string, context: string, persona: any, angle: any, offer: any, icp: any, companyName: string, websiteUrl: string;
+  try {
+    ({ target, context, persona, angle, offer, icp, companyName, websiteUrl } = await req.json());
+  } catch {
+    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+  }
 
   if (!target?.trim()) {
     return NextResponse.json({ error: "Target is required" }, { status: 400 });

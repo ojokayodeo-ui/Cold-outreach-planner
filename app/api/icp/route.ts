@@ -100,7 +100,12 @@ async function searchLinkedInPeople(titles: string[], industry: string, geograph
 }
 
 export async function POST(req: NextRequest) {
-  const { target, context, geography, research } = await req.json();
+  let target: string, context: string, geography: string, research: any;
+  try {
+    ({ target, context, geography, research } = await req.json());
+  } catch {
+    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+  }
   if (!target?.trim()) {
     return NextResponse.json({ error: "Target is required" }, { status: 400 });
   }

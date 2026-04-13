@@ -109,7 +109,12 @@ function detectSector(target: string): string {
 }
 
 export async function POST(req: NextRequest) {
-  const { target, context, geography, websiteUrl } = await req.json();
+  let target: string, context: string, geography: string, websiteUrl: string;
+  try {
+    ({ target, context, geography, websiteUrl } = await req.json());
+  } catch {
+    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+  }
   if (!target?.trim()) {
     return NextResponse.json({ error: "Target is required" }, { status: 400 });
   }
@@ -144,7 +149,7 @@ export async function POST(req: NextRequest) {
           )
         : Promise.resolve(""),
       hasWebsite ? scrapeWebsite(normalizedUrl) : Promise.resolve(""),
-    ]);
+    ]).catch(() => ["", "", "", "", ""] as string[]);
 
   // LinkedIn enrichment (1 company only to keep it fast)
   const sector = detectSector(target);

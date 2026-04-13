@@ -99,7 +99,12 @@ async function lookupLinkedInCompany(domain: string): Promise<string> {
 }
 
 export async function POST(req: NextRequest) {
-  const { url, context, geography } = await req.json();
+  let url: string, context: string, geography: string;
+  try {
+    ({ url, context, geography } = await req.json());
+  } catch {
+    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+  }
   if (!url?.trim()) {
     return NextResponse.json({ error: "Website URL is required" }, { status: 400 });
   }

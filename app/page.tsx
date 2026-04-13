@@ -71,7 +71,15 @@ export default function ColdOutreachApp() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     });
-    const data = await res.json();
+    const text = await res.text();
+    let data: any;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      // Server returned non-JSON (HTML error/timeout page)
+      if (res.status === 504 || res.status === 502) throw new Error("Request timed out — please try again.");
+      throw new Error(`Server error (${res.status}) — please try again.`);
+    }
     if (!res.ok) throw new Error(data.error ?? "Request failed");
     return data;
   }

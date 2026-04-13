@@ -26,7 +26,12 @@ async function claude(prompt: string, maxTokens = 16000): Promise<string> {
 }
 
 export async function POST(req: NextRequest) {
-  const { target, context, geography, research, icpPersonas } = await req.json();
+  let target: string, context: string, geography: string, research: any, icpPersonas: any;
+  try {
+    ({ target, context, geography, research, icpPersonas } = await req.json());
+  } catch {
+    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+  }
   if (!target?.trim()) {
     return NextResponse.json({ error: "Target is required" }, { status: 400 });
   }
