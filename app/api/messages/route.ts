@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
+export const runtime = 'edge';
 export const maxDuration = 120;
 
 async function claude(prompt: string, maxTokens = 8000): Promise<string> {
