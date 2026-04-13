@@ -107,60 +107,48 @@ export async function POST(req: NextRequest) {
 
   const geo = geography && geography !== "Global" ? geography : "";
 
-  // 1. Run Perplexity + job-title lookup in parallel
-  const [icpSearch, titlesSearch] = await Promise.all([
-    perplexitySearch(
-      `Give 4-5 specific real company examples matching this ICP: ${target}${geo ? ` in ${geo}` : ""}. Include company name, size, what they do, and revenue range.`
-    ),
-    perplexitySearch(
-      `What are the exact LinkedIn job titles of B2B decision-makers who buy ${target}? ` +
-      `List 8 specific titles (e.g. "Managing Director", "Head of Revenue Operations"). Return a plain comma-separated list only.`
-    ),
-  ]);
+  // Single Perplexity call covering both ICP examples AND job titles
+  const icpSearch = await perplexitySearch(
+    `For the market: "${target}"${geo ? ` in ${geo}` : ""}:
+1. Give 3-4 specific real company examples with company name, size, and revenue range.
+2. List 6-8 exact LinkedIn job titles of decision-makers who buy this type of service (comma-separated).`
+  );
 
-  // 2. Parse titles from Perplexity response or fall back to defaults
+  // Parse job titles from combined response
   let titles: string[] = [];
-  if (titlesSearch) {
-    titles = titlesSearch
+  if (icpSearch) {
+    const titleLine = icpSearch.match(/\d\.\s.*?titles?[^:]*:\s*([^\n]+)/i)?.[1] ?? "";
+    titles = (titleLine || icpSearch)
       .split(/,|\n/)
       .map((t: string) => t.replace(/^[\d.\-*•\s"]+|["]+$/g, "").trim())
-      .filter((t: string) => t.length > 3 && t.length < 60)
-      .slice(0, 8);
+      .filter((t: string) => t.length > 4 && t.length < 60 && !/^\d/.test(t))
+      .slice(0, 6);
   }
   if (titles.length < 3) {
-    titles = ["Managing Director", "CEO", "Founder", "Head of Sales", "VP Sales", "Chief Revenue Officer", "Head of Growth", "Commercial Director"];
+    titles = ["Managing Director", "CEO", "Founder", "Head of Sales", "VP Sales", "Commercial Director"];
   }
 
-  // 3. Run LinkedIn searches with real titles (two parallel searches for more variety)
-  const midpoint = Math.ceil(titles.length / 2);
-  const [linkedInBatch1, linkedInBatch2] = await Promise.all([
-    searchLinkedInPeople(titles.slice(0, midpoint), "", geo, 3),
-    searchLinkedInPeople(titles.slice(midpoint), "", geo, 3),
-  ]);
-  const realPeopleData = [linkedInBatch1, linkedInBatch2].filter(Boolean).join("\n\n===\n\n");
+  // ONE LinkedIn search with top titles
+  const realPeopleData = await searchLinkedInPeople(titles.slice(0, 4), "", geo, 4);
 
   const hasLiveData = !!(icpSearch || realPeopleData);
 
   const liveBlock = hasLiveData ? `
 === LIVE ICP INTELLIGENCE ===
-${icpSearch ? `[REAL COMPANY EXAMPLES FROM WEB]\n${icpSearch}` : ""}
-
-${titles.length ? `[REAL JOB TITLES USED FOR LINKEDIN SEARCH]\n${titles.join(", ")}` : ""}
-
-${realPeopleData ? `[REAL LINKEDIN DECISION-MAKER PROFILES — mirror their language, concerns, and patterns exactly in personas]\n\n${realPeopleData}` : ""}
+${icpSearch ? `[COMPANY EXAMPLES & DECISION-MAKER TITLES]\n${icpSearch}` : ""}
+${realPeopleData ? `\n[REAL LINKEDIN PROFILES — mirror their language and patterns in personas]\n${realPeopleData}` : ""}
 === END LIVE INTELLIGENCE ===
 ` : "";
 
   const researchSummary = research ? `
-KEY RESEARCH FINDINGS:
-- Pain points: ${research.pain_points?.slice(0, 5).join("; ")}
-- Buying triggers: ${research.buying_triggers?.slice(0, 4).join("; ")}
-- Desires: ${research.desires?.slice(0, 4).join("; ")}
-- Objections: ${research.objections?.slice(0, 3).join("; ")}
+KEY RESEARCH:
+- Pain points: ${research.pain_points?.slice(0, 4).join("; ")}
+- Buying triggers: ${research.buying_triggers?.slice(0, 3).join("; ")}
+- Desires: ${research.desires?.slice(0, 3).join("; ")}
+- Objections: ${research.objections?.slice(0, 2).join("; ")}
 ` : "";
 
   const prompt = `You are a world-class B2B go-to-market strategist.
-
 Build a precise ICP and 3 detailed buyer personas for cold outreach.
 
 Target: "${target}"
@@ -169,16 +157,14 @@ ${geo ? `Geography: ${geo}` : ""}
 ${researchSummary}
 ${liveBlock}
 
-CRITICAL INSTRUCTIONS:
+INSTRUCTIONS:
 ${realPeopleData
-  ? `- You have REAL LinkedIn profiles above. Base the personas directly on these real people's language, job titles, skills, experience, and career patterns.
-- Mirror the exact vocabulary and tone they use in their headlines and summaries.
-- Their listed skills reveal what they care about — reflect this in goals and KPIs.
-- Their groups and certifications reveal their watering holes — use these directly.`
-  : "- No live LinkedIn data available. Use best knowledge to build authentic personas."}
-- Persona quotes must sound like something a real person in this role would say on a discovery call.
-- Pain points = EMOTIONAL (how it feels) + OPERATIONAL (what it costs in time/money/risk).
-- Watering holes must be SPECIFIC (e.g. 'Recruitment Brainfood newsletter', 'SaaStr Annual conference').
+    ? `- Use the REAL LinkedIn profiles above. Mirror their job titles, language, skills, and career patterns in personas.
+- Their listed groups/certifications = their watering holes. Use them.`
+    : "- No live LinkedIn data. Use best knowledge to build authentic personas."}
+- Quotes must sound like something said on a real discovery call.
+- Pain points = EMOTIONAL (how it feels) + OPERATIONAL (what it costs).
+- Watering holes must be SPECIFIC named communities, newsletters, or events.
 
 Return ONLY valid JSON — no markdown.
 
@@ -187,7 +173,7 @@ Return ONLY valid JSON — no markdown.
     "industry": "Primary industry",
     "sub_niche": "Specific sub-niche",
     "company_size": "e.g. 10–50 employees",
-    "revenue_range": "e.g. £1M–£5M revenue",
+    "revenue_range": "e.g. £1M–£5M",
     "geography": "Target geography",
     "business_model": "e.g. B2B staffing agency",
     "tech_stack": ["tool1", "tool2", "tool3"],
@@ -202,19 +188,19 @@ Return ONLY valid JSON — no markdown.
       "id": "persona-1",
       "name": "Alex",
       "title": "Job title",
-      "linkedin_titles_matched": ["Title from real data if applicable"],
+      "linkedin_titles_matched": ["Real title if matched"],
       "company_stage": "e.g. Established recruitment agency, 25 staff",
       "goals": ["Goal 1", "Goal 2", "Goal 3"],
       "kpis": ["KPI 1", "KPI 2"],
-      "pain_points": ["Emotional pain: how it feels", "Operational pain: what it costs", "Third pain"],
-      "desires": ["Deeper desire 1", "Aspiration 2", "Aspiration 3"],
-      "objections": ["Real objection 1", "Objection 2", "Objection 3"],
-      "decision_process": "Detailed: who else involved, timeline, what triggers yes",
+      "pain_points": ["Emotional pain", "Operational pain", "Third pain"],
+      "desires": ["Desire 1", "Aspiration 2", "Aspiration 3"],
+      "objections": ["Objection 1", "Objection 2", "Objection 3"],
+      "decision_process": "Who else is involved, timeline, what triggers yes",
       "platforms": ["LinkedIn", "platform2"],
-      "watering_holes": ["Specific community or newsletter", "Specific event or podcast"],
-      "daily_frustration": "One sentence: a specific frustration that makes them receptive to outreach",
-      "quote": "Something they'd genuinely say on a sales call — in their authentic voice",
-      "skills_profile": ["Skill 1 from LinkedIn data", "Skill 2"]
+      "watering_holes": ["Specific newsletter or community", "Specific event or podcast"],
+      "daily_frustration": "One sentence frustration that makes them receptive",
+      "quote": "Something they'd say on a sales call — authentic voice",
+      "skills_profile": ["Skill 1", "Skill 2"]
     }
   ]
 }`;
@@ -229,8 +215,8 @@ Return ONLY valid JSON — no markdown.
         real_profiles_used: !!realPeopleData,
         linkedin_titles_searched: titles,
         sources: [
-          hasLiveData ? "Perplexity Sonar Pro" : null,
-          realPeopleData ? "Proxycurl LinkedIn People Search (live profiles)" : null,
+          icpSearch ? "Perplexity Sonar Pro" : null,
+          realPeopleData ? "Proxycurl LinkedIn" : null,
           "Claude claude-sonnet-4-6",
         ].filter(Boolean),
       },
