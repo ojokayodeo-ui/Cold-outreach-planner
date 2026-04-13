@@ -6,9 +6,10 @@
   publish   = ".next"
 
 # Extend function timeout for long-running AI API calls.
-# Requires Netlify Pro or higher for values above 10s.
+# Free tier max is 10s; Pro allows up to 26s; Enterprise allows higher.
+# All API routes have been optimised to complete within ~30s.
 [functions."___netlify-server-handler"]
-  timeout = 60
+  timeout = 26
 
 # Explicitly route all Next.js server-rendered paths to the function.
 # Required because the server handler's export const config path routing

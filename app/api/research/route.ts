@@ -6,7 +6,7 @@ function cleanJson(raw: string): string {
   return raw.replace(/```json\s*/g, "").replace(/```\s*/g, "").trim();
 }
 
-async function claude(prompt: string, maxTokens = 14000): Promise<string> {
+async function claude(prompt: string, maxTokens = 6000): Promise<string> {
   const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: {
@@ -28,7 +28,7 @@ async function claude(prompt: string, maxTokens = 14000): Promise<string> {
   return data.content[0].text ?? "";
 }
 
-async function perplexitySearch(query: string, maxTokens = 1500): Promise<string> {
+async function perplexitySearch(query: string, maxTokens = 1200): Promise<string> {
   const key = process.env.PERPLEXITY_API_KEY;
   if (!key) return "";
   try {
@@ -43,7 +43,7 @@ async function perplexitySearch(query: string, maxTokens = 1500): Promise<string
         ],
         max_tokens: maxTokens,
       }),
-      signal: AbortSignal.timeout(22000),
+      signal: AbortSignal.timeout(10000),
     });
     if (!res.ok) return "";
     const data: any = await res.json();
@@ -125,8 +125,11 @@ export async function POST(req: NextRequest) {
     ? (websiteUrl.startsWith("http") ? websiteUrl : `https://${websiteUrl}`)
     : "";
 
-  // 4 parallel Perplexity searches + optional website scrape (reduced from 7 to prevent timeout)
-  const [marketSearch, competitorSearch, buyerSearch, competitorIntel, websiteText] =
+  // All external calls run in parallel — capped at 10s each to stay under Netlify's 60s limit
+  const sector = detectSector(target);
+  const linkedInUrl = (SECTOR_LINKEDIN[sector] ?? [])[0] ?? "";
+
+  const [marketSearch, competitorSearch, buyerSearch, competitorIntel, websiteText, linkedInData] =
     await Promise.all([
       perplexitySearch(
         `Market size, growth rate, key trends and recent news for the ${target} market${geo ? ` in ${geo}` : ""}. Include specific statistics and sources.`
@@ -135,7 +138,7 @@ export async function POST(req: NextRequest) {
         `List 10 specific real companies competing in the ${target} space${geo ? ` in ${geo}` : ""}. ` +
         `For each: company name, website URL, year founded, size, main offer, pricing, ` +
         `founder/owner name and LinkedIn URL, their USP, common customer complaints, and gaps you can exploit.`,
-        2500
+        2000
       ),
       perplexitySearch(
         `Biggest pain points, frustrations, buying triggers, and objections for decision-makers in ${target}${geo ? ` in ${geo}` : ""}. What makes them receptive to new solutions?`
@@ -145,18 +148,12 @@ export async function POST(req: NextRequest) {
             `Research the company at ${normalizedUrl}. Find: exact company name, what they do, ` +
             `company size, founding year, location, products/services, target customers, ` +
             `recent news or funding, growth signals, and how they compare to others in the ${target} market.`,
-            1800
+            1200
           )
         : Promise.resolve(""),
       hasWebsite ? scrapeWebsite(normalizedUrl) : Promise.resolve(""),
-    ]).catch(() => ["", "", "", "", ""] as string[]);
-
-  // LinkedIn enrichment (1 company only to keep it fast)
-  const sector = detectSector(target);
-  const linkedInUrl = SECTOR_LINKEDIN[sector] ?? [];
-  const linkedInData = linkedInUrl.length
-    ? await scrapeLinkedInCompany(linkedInUrl[0]).catch(() => "")
-    : "";
+      linkedInUrl ? scrapeLinkedInCompany(linkedInUrl).catch(() => "") : Promise.resolve(""),
+    ]).catch(() => ["", "", "", "", "", ""] as string[]);
 
   const hasLiveData = !!(marketSearch || competitorSearch || buyerSearch);
 
