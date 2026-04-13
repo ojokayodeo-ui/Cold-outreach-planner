@@ -6,7 +6,7 @@ function cleanJson(raw: string): string {
   return raw.replace(/```json\s*/g, "").replace(/```\s*/g, "").trim();
 }
 
-async function claude(prompt: string, maxTokens = 8000): Promise<string> {
+async function claude(prompt: string, maxTokens = 4000): Promise<string> {
   const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: {
@@ -40,7 +40,7 @@ async function perplexitySearch(query: string): Promise<string> {
         ],
         max_tokens: 1000,
       }),
-      signal: AbortSignal.timeout(20000),
+      signal: AbortSignal.timeout(5000),
     });
     if (!res.ok) return "";
     const data: any = await res.json();
@@ -68,7 +68,7 @@ async function searchLinkedInPeople(titles: string[], industry: string, geograph
 
     const res = await fetch(`https://nubela.co/proxycurl/api/search/person?${params}`, {
       headers: { Authorization: `Bearer ${key}` },
-      signal: AbortSignal.timeout(15000),
+      signal: AbortSignal.timeout(5000),
     });
     if (!res.ok) return "";
     const data: any = await res.json();
@@ -154,7 +154,7 @@ KEY RESEARCH:
 ` : "";
 
   const prompt = `You are a world-class B2B go-to-market strategist.
-Build a precise ICP and 3 detailed buyer personas for cold outreach.
+Build a precise ICP and 2 detailed buyer personas for cold outreach.
 
 Target: "${target}"
 ${context ? `Seller: "${context}"` : ""}

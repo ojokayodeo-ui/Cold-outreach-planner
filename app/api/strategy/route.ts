@@ -206,7 +206,7 @@ Return ONLY valid JSON — no markdown, no explanation.
   }
 }
 
-Generate 10 angles (diverse mix of types: pain, opportunity, competitor, curiosity, data, authority, social proof, urgency, outcome, and reframe), 3 offers, 2 lead magnets, all 5 funnel stages, 3 competitor offer profiles, 3 competitor messaging examples, 3 add-on services.
+Generate 5 angles (diverse mix of types: pain, opportunity, competitor, curiosity, data), 3 offers, 2 lead magnets, all 5 funnel stages, 2 competitor offer profiles, 2 competitor messaging examples, 2 add-on services.
 For outreach_math: use REALISTIC conversion rates for THIS specific market (${icp?.industry ?? "B2B"} / ${icp?.sub_niche ?? ""}). Adjust open rates, reply rates, and positive response rates based on the industry norms, persona seniority, and outreach channel. Recalculate all numbers accordingly — do NOT use the placeholder numbers above.`;
 
   try {

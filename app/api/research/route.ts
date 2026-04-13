@@ -6,7 +6,7 @@ function cleanJson(raw: string): string {
   return raw.replace(/```json\s*/g, "").replace(/```\s*/g, "").trim();
 }
 
-async function claude(prompt: string, maxTokens = 6000): Promise<string> {
+async function claude(prompt: string, maxTokens = 4000): Promise<string> {
   const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: {
@@ -43,7 +43,7 @@ async function perplexitySearch(query: string, maxTokens = 1200): Promise<string
         ],
         max_tokens: maxTokens,
       }),
-      signal: AbortSignal.timeout(10000),
+      signal: AbortSignal.timeout(5000),
     });
     if (!res.ok) return "";
     const data: any = await res.json();
@@ -55,7 +55,7 @@ async function scrapeWebsite(url: string): Promise<string> {
   try {
     const res = await fetch(url, {
       headers: { "User-Agent": "Mozilla/5.0 (compatible; research-bot/1.0)", Accept: "text/html" },
-      signal: AbortSignal.timeout(10000),
+      signal: AbortSignal.timeout(5000),
     });
     if (!res.ok) return "";
     const html = await res.text();
@@ -77,7 +77,7 @@ async function scrapeLinkedInCompany(url: string): Promise<string> {
   try {
     const res = await fetch(
       `https://nubela.co/proxycurl/api/linkedin/company?url=${encodeURIComponent(url)}`,
-      { headers: { Authorization: `Bearer ${key}` }, signal: AbortSignal.timeout(10000) }
+      { headers: { Authorization: `Bearer ${key}` }, signal: AbortSignal.timeout(5000) }
     );
     if (!res.ok) return "";
     const d: any = await res.json();
@@ -249,7 +249,7 @@ Return ONLY valid JSON — no markdown.
   "common_messaging": ["Overused pattern 1","Pattern 2","Pattern 3","Pattern 4"]${websiteJsonSection}
 }
 
-Generate exactly 10 competitor_profiles.${hasWebsite ? " website_analysis and swot are mandatory." : ""}`;
+Generate exactly 5 competitor_profiles.${hasWebsite ? " website_analysis and swot are mandatory." : ""}`;
 
   try {
     const raw = await claude(prompt);
