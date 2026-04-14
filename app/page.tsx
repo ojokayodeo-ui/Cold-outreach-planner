@@ -80,7 +80,7 @@ export default function ColdOutreachApp() {
       if (res.status === 504 || res.status === 502) throw new Error("Request timed out — please try again.");
       throw new Error(`Server error (${res.status}) — please try again.`);
     }
-    if (!res.ok) throw new Error(data.error ?? "Request failed");
+    if (!res.ok) throw new Error(data.error || data.message || `Request failed (${res.status})`);
     return data;
   }
 
