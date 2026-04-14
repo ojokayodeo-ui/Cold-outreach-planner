@@ -19,7 +19,7 @@ async function claude(prompt: string, maxTokens = 8000): Promise<string> {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: "claude-haiku-4-5-20251001",
+      model: "claude-sonnet-4-6",
       max_tokens: maxTokens,
       messages: [{ role: "user", content: prompt }],
     }),
@@ -44,7 +44,7 @@ async function perplexitySearch(query: string): Promise<string> {
         ],
         max_tokens: 1000,
       }),
-      signal: AbortSignal.timeout(5000),
+      signal: AbortSignal.timeout(20000),
     });
     if (!res.ok) return "";
     const data: any = await res.json();
@@ -72,7 +72,7 @@ async function searchLinkedInPeople(titles: string[], industry: string, geograph
 
     const res = await fetch(`https://nubela.co/proxycurl/api/search/person?${params}`, {
       headers: { Authorization: `Bearer ${key}` },
-      signal: AbortSignal.timeout(5000),
+      signal: AbortSignal.timeout(15000),
     });
     if (!res.ok) return "";
     const data: any = await res.json();
@@ -158,7 +158,7 @@ KEY RESEARCH:
 ` : "";
 
   const prompt = `You are a world-class B2B go-to-market strategist.
-Build a precise ICP and 2 detailed buyer personas for cold outreach.
+Build a precise ICP and 3 detailed buyer personas for cold outreach.
 
 Target: "${target}"
 ${context ? `Seller: "${context}"` : ""}
@@ -226,7 +226,7 @@ Return ONLY valid JSON — no markdown.
         sources: [
           icpSearch ? "Perplexity Sonar Pro" : null,
           realPeopleData ? "Proxycurl LinkedIn" : null,
-          "Claude claude-haiku-4-5",
+          "Claude claude-sonnet-4-6",
         ].filter(Boolean),
       },
     });
