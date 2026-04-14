@@ -10,7 +10,7 @@ function cleanJson(raw: string): string {
   return s;
 }
 
-async function claude(prompt: string, maxTokens = 8000): Promise<string> {
+async function claude(prompt: string, maxTokens = 12000): Promise<string> {
   const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: {
