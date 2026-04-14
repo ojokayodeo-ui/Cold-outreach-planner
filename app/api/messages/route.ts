@@ -23,10 +23,11 @@ async function claude(prompt: string, maxTokens = 8000): Promise<string> {
 }
 
 function cleanJson(raw: string): string {
-  return raw
-    .replace(/```json\s*/g, "")
-    .replace(/```\s*/g, "")
-    .trim();
+  let s = raw.replace(/```json\s*/g, "").replace(/```\s*/g, "").trim();
+  const start = s.indexOf("{");
+  const end = s.lastIndexOf("}");
+  if (start !== -1 && end !== -1 && end > start) s = s.slice(start, end + 1);
+  return s;
 }
 
 export async function POST(req: NextRequest) {

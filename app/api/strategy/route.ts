@@ -4,10 +4,14 @@ export const runtime = 'edge';
 export const maxDuration = 120;
 
 function cleanJson(raw: string): string {
-  return raw.replace(/```json\s*/g, "").replace(/```\s*/g, "").trim();
+  let s = raw.replace(/```json\s*/g, "").replace(/```\s*/g, "").trim();
+  const start = s.indexOf("{");
+  const end = s.lastIndexOf("}");
+  if (start !== -1 && end !== -1 && end > start) s = s.slice(start, end + 1);
+  return s;
 }
 
-async function claude(prompt: string, maxTokens = 8000): Promise<string> {
+async function claude(prompt: string, maxTokens = 10000): Promise<string> {
   const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: {
