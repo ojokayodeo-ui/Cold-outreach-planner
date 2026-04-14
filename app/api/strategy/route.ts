@@ -10,7 +10,7 @@ function cleanJson(raw: string): string {
   return s;
 }
 
-async function claude(prompt: string, maxTokens = 10000): Promise<string> {
+async function claude(prompt: string, maxTokens = 12000): Promise<string> {
   const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: {
@@ -19,7 +19,7 @@ async function claude(prompt: string, maxTokens = 10000): Promise<string> {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: "claude-sonnet-4-6",
+      model: "claude-haiku-4-5-20251001",
       max_tokens: maxTokens,
       messages: [{ role: "user", content: prompt }],
     }),
