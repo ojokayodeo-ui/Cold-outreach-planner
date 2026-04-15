@@ -26,6 +26,7 @@ function cleanJson(raw: string): string {
   const start = s.indexOf("{");
   const end = s.lastIndexOf("}");
   if (start !== -1 && end !== -1 && end > start) s = s.slice(start, end + 1);
+  s = s.replace(/,(\s*[}\]])/g, "$1");
   return s;
 }
 
@@ -42,85 +43,149 @@ export async function POST(req: NextRequest) {
   }
 
   const prospectLine = companyName
-    ? `\nPROSPECT COMPANY: "${companyName}"${websiteUrl ? ` (${websiteUrl})` : ""} — personalise every message to this specific company. Replace generic references with their company name, industry, or known details.`
+    ? `\nPROSPECT COMPANY: "${companyName}"${websiteUrl ? ` (${websiteUrl})` : ""} — weave their company name, industry, and situation into every message naturally. Never use generic placeholders when you have real data.`
     : "";
 
-  const prompt = `You are a master cold email copywriter who has generated $10M+ in pipeline for B2B companies.
+  const psychProfile = persona?.psychological_profile;
 
-Write a complete outreach sequence for the following campaign. Every message must feel human, specific, and non-spammy. No corporate buzzwords. No "I hope this email finds you well."
+  const prompt = `You are a world-class direct response copywriter and behavioural psychologist. You have personally written campaigns that generated $50M+ in B2B pipeline. You understand human decision-making at a deep level.
+
+You know these principles cold:
+- LOSS AVERSION: Losses feel 2x more painful than equivalent gains. Lead with what they risk losing, not what they could gain.
+- SOCIAL PROOF: People follow peers. Name-drop relevant companies or roles (not brands they aspire to — brands like them).
+- FOMO: Fear of being left behind is more motivating than desire to get ahead.
+- RECIPROCITY: Give something genuinely useful before asking for anything.
+- CURIOSITY GAP: The brain craves closure. Open loops they must close.
+- IDENTITY: People act consistently with how they see themselves. Speak to who they WANT to be.
+- SCARCITY/URGENCY: Real urgency (market timing, competitor moves, capacity) converts. Fake urgency destroys trust.
+- PATTERN INTERRUPT: Break their email-scanning autopilot with an unexpected opener.
 ${prospectLine}
 
-CAMPAIGN BRIEF:
+NEVER WRITE:
+- 'I hope this email finds you well'
+- 'I wanted to reach out because...'
+- 'We help companies like yours...'
+- 'Would you be open to a quick 15-minute call?'
+- 'I came across your profile and...'
+- 'I know you are busy...'
+- Buzzwords: synergy, leverage, solutions, ecosystem, journey, scalable, robust
+- Vague claims without specifics
+
+ALWAYS:
+- Open with THEIR world, not yours (their situation, their pain, their context)
+- Specificity > generality: real numbers, real situations, real consequences
+- Pain before solution — they must feel the problem before they want the fix
+- One CTA per email — make it embarrassingly easy to say yes
+- Write to ONE human, not a department
+- Sound like someone who actually researched them and gives a damn
+- Use {{first_name}} as personalisation placeholder
+
+CAMPAIGN CONTEXT:
 - Target market: "${target}"
-${context ? `- Seller/service: "${context}"` : ""}
-- ICP: ${icp?.industry ?? ""} / ${icp?.sub_niche ?? ""}, company size ${icp?.company_size ?? ""}
+${context ? `- What we sell: "${context}"` : ""}
+- ICP: ${icp?.industry ?? ""} / ${icp?.sub_niche ?? ""}, ${icp?.company_size ?? ""}
 
-TARGET PERSONA:
-- Name/role: ${persona?.title ?? "decision-maker"}
-- Key pain point: ${persona?.pain_points?.[0] ?? "scaling their business"}
-- Core desire: ${persona?.desires?.[0] ?? "predictable revenue growth"}
+PERSONA — ${persona?.title ?? "decision-maker"}:
+- Primary pain: ${persona?.pain_points?.[0] ?? "scaling efficiently"}
+- Second pain: ${persona?.pain_points?.[1] ?? ""}
+- Core desire: ${persona?.desires?.[0] ?? "predictable results"}
 - Main objection: ${persona?.objections?.[0] ?? "already tried it"}
-- Their quote (voice): "${persona?.quote ?? "we need more qualified leads"}"
+- Their voice: '${persona?.quote ?? "we need more qualified leads"}'
+- Daily frustration: ${persona?.daily_frustration ?? ""}
+${psychProfile ? `- Fear of inaction: ${psychProfile.fear_of_inaction ?? ""}
+- Identity they want: ${psychProfile.identity_aspiration ?? ""}
+- Emotional state: ${psychProfile.emotional_state ?? ""}
+- Urgency triggers: ${(psychProfile.urgency_triggers ?? []).join("; ")}
+- Status threat: ${psychProfile.status_threat ?? ""}
+- Buying psychology: ${psychProfile.buying_psychology ?? ""}` : ""}
 
-CAMPAIGN ANGLE: "${angle?.name ?? "pain-based"}"
-- Hook to use: ${angle?.sample_hook ?? ""}
+CAMPAIGN ANGLE: "${angle?.name ?? "pain-based"}" (${angle?.type ?? "pain"})
+- Hook: ${angle?.sample_hook ?? ""}
+- Psychological principle: ${angle?.psychological_principle ?? "Loss Aversion"}
+- Urgency mechanism: ${angle?.urgency_mechanism ?? ""}
 
-OFFER/CTA: "${offer?.name ?? "free strategy call"}"
-- CTA line: ${offer?.cta ?? "Would a quick call to discuss this make sense?"}
+OFFER: "${offer?.name ?? "free strategy call"}"
+- CTA: ${offer?.cta ?? "Worth a 20-min call to explore this?"}
+- Friction level: ${offer?.friction_level ?? "low"}
 
-DELIVERABLES:
+WRITE A 5-EMAIL SEQUENCE using DELIBERATE psychological frameworks:
 
-1. COLD EMAIL SEQUENCE (5 emails)
-   - Email 1: Initial cold outreach (Day 1). 4–6 lines. Lead with the angle hook. One clear CTA.
-   - Email 2: Follow-up (Day 4). Different angle/hook. Reference the first email subtly. No guilt-tripping.
-   - Email 3: Value add (Day 8). Include a genuine insight, stat, or resource. Soft CTA.
-   - Email 4: Pattern interrupt (Day 14). Short, direct, slightly cheeky. 2–3 lines max.
-   - Email 5: Break-up email (Day 21). Professional close. Leave the door open.
+EMAIL 1 — Day 1 — HOOK + LOSS AVERSION
+Framework: Open in their world (specific situation they recognise). Name what they are currently LOSING or RISKING by not solving this. One specific proof point or observation. Low-friction CTA.
+Psychological trigger: Loss aversion — make the cost of inaction concrete and personal.
+Length: 5-7 lines. Subject: 3-5 words, curiosity or specificity, no spam triggers.
 
-   Rules for all emails:
-   - Subject lines: 3–6 words, no spam triggers, no ALL CAPS, test curiosity or specificity
-   - Bodies: under 150 words each
-   - One CTA per email max
-   - Write AS the seller (first person)
-   - No attachments mentioned in early emails
-   - Use {{first_name}} as the personalization placeholder
-   ${companyName ? `- Replace {{company_name}} with "${companyName}" where relevant` : ""}
+EMAIL 2 — Day 5 — SOCIAL PROOF + FOMO
+Framework: Open with what similar people/companies are doing (not aspirational logos — similar-sized peers). Create mild FOMO — they are moving while your prospect is standing still. Reframe the offer as the obvious next step for someone at their stage.
+Psychological trigger: Social proof + loss of competitive position.
+Length: 5-6 lines. Subject: different angle from email 1.
 
-2. LINKEDIN CONNECTION REQUEST NOTE (under 300 characters, no hard sell)
+EMAIL 3 — Day 10 — RECIPROCITY + CURIOSITY GAP
+Framework: Lead with a GENUINELY useful insight, specific stat, or short framework relevant to their exact situation. Give it freely. Then open a curiosity gap that only resolves if they reply. Softest CTA of the sequence.
+Psychological trigger: Reciprocity (they owe a response) + Curiosity Gap (brain seeks closure).
+Length: 6-8 lines (the insight needs room). No hard sell.
 
-3. LINKEDIN FOLLOW-UP MESSAGE (after connection accepted, 2–3 sentences, value-first)
+EMAIL 4 — Day 16 — PATTERN INTERRUPT + SCARCITY
+Framework: Break their scanning autopilot with an unexpected, slightly disarming opener (self-aware, direct, or unexpected angle). Introduce REAL scarcity or urgency (capacity, timing, market window — never fake deadlines). Ultra-short.
+Psychological trigger: Pattern interrupt + scarcity/urgency.
+Length: 3-4 lines MAX. Short subject line.
 
-4. 3–4 PERSONALIZATION HOOKS — specific triggers to look for on a prospect's LinkedIn/website that justify personalizing an outreach
-   - Trigger: what to look for
-   - Hook: how to open the email using that trigger
-   - Example: a real-sounding personalized opener
+EMAIL 5 — Day 23 — IDENTITY + OPEN DOOR
+Framework: Speak to their professional identity — the person they want to be. Acknowledge this may not be the right time. Leave the door open with grace and zero pressure. Make them feel respected. Sometimes this triggers a reply purely because of reciprocity.
+Psychological trigger: Identity-based challenge + reciprocity.
+Length: 4-5 lines. No hard sell. Professional close.
 
-Return ONLY valid JSON — no markdown, no explanation.
+ADDITIONAL DELIVERABLES:
+
+LINKEDIN CONNECTION NOTE: Under 280 characters. Reference something specific about them (recent post, company news, shared context). Zero pitch. Pure curiosity or genuine observation.
+
+LINKEDIN FOLLOW-UP (after accepting): 3 sentences. Open with their world, share one useful observation or resource relevant to them, end with a curiosity-opening question — not a pitch.
+
+OBJECTION HANDLING SCRIPTS — 3 most common objections with exact reply copy:
+- For each: the objection, the psychological reason behind it, and a 2-3 sentence response that addresses the real concern without being defensive.
+
+PERSONALISATION HOOKS — 4 specific triggers to look for on their LinkedIn/website with exact openers:
+- Trigger: what to look for
+- Hook: the psychological angle to use
+- Example opener: a fully written first line
+
+Return ONLY valid JSON — no markdown, no code fences.
+CRITICAL: Never use double-quote characters inside string values (use apostrophes). No trailing commas. No raw newlines in strings.
 
 {
   "cold_email_sequence": [
     {
       "step": 1,
-      "label": "Initial outreach",
-      "subject": "Subject line",
-      "body": "Full email body with {{first_name}} placeholder",
-      "purpose": "What this email is trying to achieve",
+      "label": "Loss Aversion Hook",
+      "subject": "3-5 word subject",
+      "body": "Full email body with {{first_name}} placeholder. Never use the forbidden phrases above.",
+      "psychological_trigger": "Loss Aversion",
+      "framework": "Open in their world → name what they are losing → proof point → CTA",
+      "purpose": "Make cost of inaction real and personal",
       "timing": "Day 1"
     }
   ],
-  "linkedin_connection_note": "Under 300 chars. No pitch.",
-  "linkedin_follow_up": "2–3 sentences after they accept the connection.",
+  "linkedin_connection_note": "Under 280 chars. Specific. No pitch.",
+  "linkedin_follow_up": "3 sentences. Their world first. Useful observation. Curiosity question.",
+  "objection_handling": [
+    {
+      "objection": "The exact objection they raise",
+      "psychological_reason": "Why they are REALLY saying this (fear, status, past experience)",
+      "response": "2-3 sentence reply that addresses the real concern. Conversational, not defensive."
+    }
+  ],
   "personalization_hooks": [
     {
-      "trigger": "What to look for on their profile or company page",
-      "hook": "How to use it as an opener",
-      "example": "Hi {{first_name}}, saw you just [specific thing] — [relevant observation that bridges to your offer]"
+      "trigger": "Specific signal to look for on their profile or company page",
+      "psychological_angle": "Which principle this activates (curiosity, identity, FOMO, etc.)",
+      "hook": "How to use it as an opener — the psychological mechanic",
+      "example": "Fully written first sentence: 'Hi {{first_name}}, noticed you [specific thing] — [specific observation that bridges to their pain]'"
     }
   ]
 }`;
 
   try {
-    const raw = await claude(prompt, 5000);
+    const raw = await claude(prompt, 6000);
     const data = JSON.parse(cleanJson(raw));
     return NextResponse.json(data);
   } catch (err) {

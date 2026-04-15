@@ -179,6 +179,49 @@ export default function StepICP({ data, onNext, loading }: Props) {
                       <p className="text-sm text-[#a0a0c0]">{p.daily_frustration}</p>
                     </div>
                   )}
+
+                  {/* Psychological Profile */}
+                  {p.psychological_profile && (
+                    <div className="md:col-span-2 border border-[#2a1a4a] bg-purple-500/5 rounded-xl p-4">
+                      <p className="text-xs font-semibold text-purple-400 uppercase tracking-wider mb-3">Psychological Profile</p>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                        {p.psychological_profile.fear_of_inaction && (
+                          <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
+                            <p className="text-red-400 font-semibold mb-1">Fear of Inaction</p>
+                            <p className="text-[#c0c0e0]">{p.psychological_profile.fear_of_inaction}</p>
+                          </div>
+                        )}
+                        {p.psychological_profile.identity_aspiration && (
+                          <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
+                            <p className="text-blue-400 font-semibold mb-1">Identity Aspiration</p>
+                            <p className="text-[#c0c0e0]">{p.psychological_profile.identity_aspiration}</p>
+                          </div>
+                        )}
+                        {p.psychological_profile.status_threat && (
+                          <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-3">
+                            <p className="text-orange-400 font-semibold mb-1">Status Threat</p>
+                            <p className="text-[#c0c0e0]">{p.psychological_profile.status_threat}</p>
+                          </div>
+                        )}
+                        {p.psychological_profile.buying_psychology && (
+                          <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3">
+                            <p className="text-green-400 font-semibold mb-1">Buying Psychology</p>
+                            <p className="text-[#c0c0e0]">{p.psychological_profile.buying_psychology}</p>
+                          </div>
+                        )}
+                        {p.psychological_profile.urgency_triggers?.length > 0 && (
+                          <div className="md:col-span-2 bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3">
+                            <p className="text-yellow-400 font-semibold mb-2">Urgency Triggers</p>
+                            <ul className="space-y-1">
+                              {p.psychological_profile.urgency_triggers.map((t: string, k: number) => (
+                                <li key={k} className="flex gap-2 text-[#c0c0e0]"><span className="text-yellow-400 shrink-0">⚡</span>{t}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </Card>
             ))}

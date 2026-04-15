@@ -308,6 +308,7 @@ export default function StepMessages({
     linkedin_connection_note = "",
     linkedin_follow_up = "",
     personalization_hooks = [],
+    objection_handling = [],
   } = data;
 
   const email = cold_email_sequence[activeEmail];
@@ -392,6 +393,16 @@ export default function StepMessages({
                 <span className="text-xs bg-[#0a0a0a] border border-[#1a1a1a] rounded-full px-2 py-0.5 text-[#555]">{email.timing}</span>
                 <span className="text-xs text-[#444]">{email.purpose}</span>
               </div>
+              {email.psychological_trigger && (
+                <div className="flex items-center gap-2 mt-2 mb-4">
+                  <span className="text-xs bg-purple-500/20 text-purple-300 border border-purple-500/30 rounded-full px-2 py-0.5">
+                    ⚡ {email.psychological_trigger}
+                  </span>
+                  {email.framework && (
+                    <span className="text-xs text-[#4a4a70] italic">{email.framework}</span>
+                  )}
+                </div>
+              )}
               <div className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-lg px-4 py-3 mb-3">
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-xs text-[#555]">Subject Line</span>
@@ -442,6 +453,33 @@ export default function StepMessages({
         </div>
       </div>
 
+      {/* Objection Handling */}
+      {data.objection_handling?.length > 0 && (
+        <div>
+          <h3 className="text-sm font-semibold text-[#a0a0c0] uppercase tracking-wider mb-3">Objection Handling Scripts</h3>
+          <div className="space-y-3">
+            {data.objection_handling.map((o: any, i: number) => (
+              <div key={i} className="bg-[#0d0d1a] border border-[#2a2a45] rounded-xl p-4">
+                <div className="flex items-start justify-between gap-4 mb-2">
+                  <p className="text-sm font-semibold text-red-300">"{o.objection}"</p>
+                  {o.psychological_reason && (
+                    <span className="text-xs bg-orange-500/10 text-orange-400 border border-orange-500/20 rounded-full px-2 py-0.5 shrink-0 whitespace-nowrap">
+                      {o.psychological_reason}
+                    </span>
+                  )}
+                </div>
+                {o.response && (
+                  <div className="bg-green-500/5 border border-green-500/20 rounded-lg px-3 py-2 flex items-start justify-between gap-2">
+                    <p className="text-xs text-green-300 flex-1">{o.response}</p>
+                    <CopyButton text={o.response} />
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Personalization Hooks */}
       {personalization_hooks.length > 0 && (
         <div>
@@ -456,6 +494,11 @@ export default function StepMessages({
                   </div>
                   <div>
                     <p className="text-xs text-[#555] mb-1">Use it as</p>
+                    {h.psychological_angle && (
+                      <span className="inline-block text-xs bg-purple-500/20 text-purple-300 border border-purple-500/30 rounded-full px-2 py-0.5 mb-2">
+                        {h.psychological_angle}
+                      </span>
+                    )}
                     <p className="text-[#c0c0c0]">{h.hook}</p>
                   </div>
                   <div>

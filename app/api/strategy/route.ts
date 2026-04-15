@@ -74,7 +74,9 @@ ${jsonRules}
       "effectiveness_score": 8,
       "sample_hook": "The actual hook line to use",
       "subject_line_example": "Email subject using this angle",
-      "recommended": true
+      "recommended": true,
+      "psychological_principle": "Loss Aversion|Social Proof|FOMO|Scarcity|Authority|Curiosity Gap|Reciprocity|Pain Amplification",
+      "urgency_mechanism": "Why this prospect should act THIS month, not next quarter — specific market/competitive/personal reason"
     }
   ],
   "recommended_angles": ["Name 1", "Name 2"],
@@ -134,7 +136,7 @@ ${jsonRules}
   ]
 }
 
-Generate 10 angles (diverse: pain, opportunity, competitor, curiosity, data, authority), 6 offers, 6 lead magnets each with a full 3-step email_sequence, all 5 funnel stages.
+Generate 10 angles (diverse: pain, opportunity, competitor, curiosity, data, authority — each with a DIFFERENT psychological_principle), 6 offers, 6 lead magnets each with a full 3-step email_sequence, all 5 funnel stages.
 For outreach_math: use REALISTIC conversion rates for THIS market (${icp?.industry ?? "B2B"} / ${icp?.sub_niche ?? ""}).`;
 
   const prompt2 = `You are a world-class B2B cold outreach strategist.

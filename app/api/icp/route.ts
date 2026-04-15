@@ -173,15 +173,20 @@ ${realPeopleData
     ? `- Use the REAL LinkedIn profiles above. Mirror their job titles, language, skills, and career patterns in personas.
 - Their listed groups/certifications = their watering holes. Use them.`
     : "- No live LinkedIn data. Use best knowledge to build authentic personas."}
-- Quotes must sound like something said on a real discovery call.
-- Pain points = EMOTIONAL (how it feels) + OPERATIONAL (what it costs).
-- Watering holes must be SPECIFIC named communities, newsletters, or events.
+- Quotes must sound like verbatim discovery call dialogue — raw, specific, frustrated.
+- Pain points = EMOTIONAL (how it makes them feel inside) + OPERATIONAL (what it costs in time/money/status).
+- Watering holes = SPECIFIC named newsletters, Slack groups, LinkedIn communities, events, podcasts.
+- psychological_profile must be deeply specific — not generic B2B platitudes. Think like a psychologist profiling a real individual.
+- fear_of_inaction should name a CONCRETE consequence they dread (e.g. 'losing their biggest client', 'being seen as the person who missed the AI wave').
+- urgency_triggers = real-world events: funding rounds, hiring pushes, competitor moves, end of quarter, new job pressure.
+- Use the REAL LinkedIn data above to ground psychological_profile in actual signals (recent job change = identity threat, recommendations = need for validation, etc.).
 
 Return ONLY valid JSON — no markdown, no code fences.
 CRITICAL JSON RULES:
 - Never use double-quote characters (") inside string values. Use apostrophes (') instead.
 - Never include raw newlines inside string values.
 - No trailing commas after the last item in any array or object.
+- Mark any uncertain field with a "(estimated)" suffix rather than fabricating specifics.
 
 {
   "icp": {
@@ -215,7 +220,15 @@ CRITICAL JSON RULES:
       "watering_holes": ["Specific newsletter or community", "Specific event or podcast"],
       "daily_frustration": "One sentence frustration that makes them receptive",
       "quote": "Something they'd say on a sales call — authentic voice",
-      "skills_profile": ["Skill 1", "Skill 2"]
+      "skills_profile": ["Skill 1", "Skill 2"],
+      "psychological_profile": {
+        "fear_of_inaction": "What concretely happens in 6-12 months if they ignore this problem — career risk, revenue loss, competitive threat",
+        "identity_aspiration": "The professional identity they want to project — who they want to be seen as by peers and boss",
+        "emotional_state": "Their dominant emotional state right now: frustrated|anxious|ambitious|stuck|overwhelmed",
+        "buying_psychology": "How they rationalize major purchases — do they need data/ROI proof, peer validation, or a safe trial?",
+        "status_threat": "What threatens their standing or credibility if this problem continues unresolved",
+        "urgency_triggers": ["Specific event or situation forcing them to act NOW, not next quarter", "Second trigger"]
+      }
     }
   ]
 }`;
