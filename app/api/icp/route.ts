@@ -9,6 +9,10 @@ function cleanJson(raw: string): string {
   if (start !== -1 && end !== -1 && end > start) s = s.slice(start, end + 1);
   // Remove trailing commas before ] or }
   s = s.replace(/,(\s*[}\]])/g, "$1");
+  // Replace literal newlines inside JSON string values with a space
+  s = s.replace(/"(?:[^"\\]|\\.)*"/g, (match) =>
+    match.replace(/\n/g, " ").replace(/\r/g, "")
+  );
   return s;
 }
 

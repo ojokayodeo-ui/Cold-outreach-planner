@@ -7,11 +7,17 @@ function cleanJson(raw: string): string {
   const start = s.indexOf("{");
   const end = s.lastIndexOf("}");
   if (start !== -1 && end !== -1 && end > start) s = s.slice(start, end + 1);
+  // Remove trailing commas before ] or }
   s = s.replace(/,(\s*[}\]])/g, "$1");
+  // Replace literal newlines/carriage returns inside JSON string values with a space.
+  // LLMs sometimes emit real \n inside string fields which breaks JSON.parse.
+  s = s.replace(/"(?:[^"\\]|\\.)*"/g, (match) =>
+    match.replace(/\n/g, " ").replace(/\r/g, "")
+  );
   return s;
 }
 
-async function claude(prompt: string, maxTokens = 10000): Promise<string> {
+async function claude(prompt: string, maxTokens = 14000): Promise<string> {
   const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: {
