@@ -7,6 +7,8 @@ function cleanJson(raw: string): string {
   const start = s.indexOf("{");
   const end = s.lastIndexOf("}");
   if (start !== -1 && end !== -1 && end > start) s = s.slice(start, end + 1);
+  // Remove trailing commas before ] or }
+  s = s.replace(/,(\s*[}\]])/g, "$1");
   return s;
 }
 
@@ -175,7 +177,11 @@ ${realPeopleData
 - Pain points = EMOTIONAL (how it feels) + OPERATIONAL (what it costs).
 - Watering holes must be SPECIFIC named communities, newsletters, or events.
 
-Return ONLY valid JSON — no markdown.
+Return ONLY valid JSON — no markdown, no code fences.
+CRITICAL JSON RULES:
+- Never use double-quote characters (") inside string values. Use apostrophes (') instead.
+- Never include raw newlines inside string values.
+- No trailing commas after the last item in any array or object.
 
 {
   "icp": {

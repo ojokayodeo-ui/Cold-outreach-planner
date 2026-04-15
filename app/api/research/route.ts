@@ -7,6 +7,7 @@ function cleanJson(raw: string): string {
   const start = s.indexOf("{");
   const end = s.lastIndexOf("}");
   if (start !== -1 && end !== -1 && end > start) s = s.slice(start, end + 1);
+  s = s.replace(/,(\s*[}\]])/g, "$1");
   return s;
 }
 
@@ -216,7 +217,8 @@ ${liveBlock}
 Use real company names, URLs, people from the research. Mark unknowns as "Unknown" — never fabricate.
 ${hasWebsite ? `website_analysis and swot must be specific to the company at ${normalizedUrl}.` : ""}
 
-Return ONLY valid JSON — no markdown.
+Return ONLY valid JSON — no markdown, no code fences.
+CRITICAL JSON RULES: Never use double-quote characters inside string values (use apostrophes instead). No trailing commas. No raw newlines inside strings.
 
 {
   "market_overview": {

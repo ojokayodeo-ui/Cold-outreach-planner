@@ -7,6 +7,7 @@ function cleanJson(raw: string): string {
   const start = s.indexOf("{");
   const end = s.lastIndexOf("}");
   if (start !== -1 && end !== -1 && end > start) s = s.slice(start, end + 1);
+  s = s.replace(/,(\s*[}\]])/g, "$1");
   return s;
 }
 
@@ -56,7 +57,8 @@ Competitors in market: ${(research?.competitors ?? []).slice(0, 3).map((c: any) 
 Overused messaging to avoid: ${research?.common_messaging?.slice(0, 3).join("; ") ?? ""}
 Primary persona: ${personas[0]?.title ?? "decision-maker"} — pain: ${personas[0]?.pain_points?.[0] ?? ""}
 
-Return ONLY valid JSON — no markdown, no explanation.
+Return ONLY valid JSON — no markdown, no code fences, no explanation.
+CRITICAL JSON RULES: Never use double-quote characters inside string values (use apostrophes instead). No trailing commas. No raw newlines inside strings.
 
 {
   "angles": [
