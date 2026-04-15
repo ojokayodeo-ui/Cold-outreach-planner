@@ -139,7 +139,7 @@ export default function StepStrategy({
       {offers.length > 0 && (
         <div>
           <h3 className="text-sm font-semibold text-[#a0a0c0] uppercase tracking-wider mb-3">Compelling Offers</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {offers.map((o: any, i: number) => (
               <Card key={i}>
                 <div className="flex items-center justify-between mb-2">
@@ -167,14 +167,43 @@ export default function StepStrategy({
       {lead_magnets.length > 0 && (
         <div>
           <h3 className="text-sm font-semibold text-[#a0a0c0] uppercase tracking-wider mb-3">Lead Magnets</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {lead_magnets.map((lm: any, i: number) => (
               <Card key={i}>
                 <Tag color="orange">{lm.format}</Tag>
                 <p className="font-semibold text-[#e8e8f2] mt-2 mb-1">{lm.name}</p>
                 <p className="text-xs text-[#a0a0c0] mb-2">{lm.description}</p>
                 <p className="text-xs text-[#6060a0] mb-1">{lm.value_proposition}</p>
-                <p className="text-xs text-blue-400 mt-2">↳ {lm.delivery}</p>
+                <p className="text-xs text-blue-400 mt-2 mb-3">↳ {lm.delivery}</p>
+                {lm.email_sequence?.length > 0 && (
+                  <div className="border-t border-[#1e1e35] pt-3">
+                    <p className="text-xs font-semibold text-[#6060a0] uppercase tracking-wider mb-2">Follow-up Sequence</p>
+                    <div className="space-y-2">
+                      {lm.email_sequence.map((step: any, j: number) => (
+                        <div key={j} className="bg-[#080810] rounded-lg p-3">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-xs font-semibold text-[#4f8ef7]">Step {step.step}</span>
+                            <span className="text-xs text-[#4a4a70]">{step.timing}</span>
+                          </div>
+                          {step.subject && (
+                            <div className="flex items-center justify-between mb-1">
+                              <p className="text-xs text-[#a0a0c0] flex-1">
+                                <span className="text-[#4a4a70]">Subject: </span>{step.subject}
+                              </p>
+                              <CopyButton text={step.subject} />
+                            </div>
+                          )}
+                          {step.body && (
+                            <div className="flex items-start justify-between gap-1 mt-1">
+                              <p className="text-xs text-[#6060a0] italic flex-1">{step.body}</p>
+                              <CopyButton text={step.body} />
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </Card>
             ))}
           </div>
@@ -245,7 +274,7 @@ export default function StepStrategy({
       {competitor_offers.length > 0 && (
         <div>
           <h3 className="text-sm font-semibold text-[#a0a0c0] uppercase tracking-wider mb-3">Competitor Offers</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {competitor_offers.map((co: any, i: number) => (
               <Card key={i} className="border-l-4 border-l-purple-500/50">
                 <p className="font-semibold text-[#e8e8f2] mb-3">{co.competitor_type}</p>
@@ -285,7 +314,7 @@ export default function StepStrategy({
       {competitor_messaging.length > 0 && (
         <div>
           <h3 className="text-sm font-semibold text-[#a0a0c0] uppercase tracking-wider mb-3">Competitor Messaging</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {competitor_messaging.map((cm: any, i: number) => (
               <Card key={i}>
                 {cm.message_type && (

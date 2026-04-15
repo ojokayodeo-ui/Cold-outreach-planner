@@ -10,7 +10,7 @@ function cleanJson(raw: string): string {
   return s;
 }
 
-async function claude(prompt: string, maxTokens = 12000): Promise<string> {
+async function claude(prompt: string, maxTokens = 16000): Promise<string> {
   const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: {
@@ -89,7 +89,27 @@ Return ONLY valid JSON — no markdown, no explanation.
       "format": "PDF|spreadsheet|video|audit|calculator|template|checklist",
       "description": "What it contains and who it's for",
       "value_proposition": "Why this persona would want it",
-      "delivery": "How to deliver it"
+      "delivery": "How to deliver it",
+      "email_sequence": [
+        {
+          "step": 1,
+          "timing": "Instant — on download",
+          "subject": "Subject line for delivery email",
+          "body": "Short 3-4 sentence delivery email body. Deliver the resource, set expectation for follow-up."
+        },
+        {
+          "step": 2,
+          "timing": "Day 3",
+          "subject": "Follow-up subject line",
+          "body": "2-3 sentence check-in. Ask if they had a chance to review it. Share one specific insight from the resource."
+        },
+        {
+          "step": 3,
+          "timing": "Day 7",
+          "subject": "Value-add subject line",
+          "body": "2-3 sentences. Share a related tip or case study. Soft CTA to book a call or reply."
+        }
+      ]
     }
   ],
   "funnel": [
@@ -151,9 +171,9 @@ Return ONLY valid JSON — no markdown, no explanation.
   "competitor_messaging": [
     {
       "message_type": "Cold email / LinkedIn DM / Ad copy",
-      "competitor_copy": "Realistic example of what competitors send — actual words they use",
+      "competitor_copy": "Realistic full example of what competitors send — actual words they use (3-5 sentences)",
       "why_it_underperforms": "What makes this ineffective or generic",
-      "your_alternative": "A stronger version that stands out"
+      "your_alternative": "A stronger full version that stands out (3-5 sentences)"
     }
   ],
   "addon_services": [
@@ -210,7 +230,7 @@ Return ONLY valid JSON — no markdown, no explanation.
   }
 }
 
-Generate 10 angles (diverse mix of types: pain, opportunity, competitor, curiosity, data, authority), 3 offers, 2 lead magnets, all 5 funnel stages, 2 competitor offer profiles, 2 competitor messaging examples, 2 add-on services.
+Generate 10 angles (diverse mix of types: pain, opportunity, competitor, curiosity, data, authority), 6 offers, 6 lead magnets (each with a full 3-step email_sequence), all 5 funnel stages, 6 competitor offer profiles, 6 competitor messaging examples, 3 add-on services.
 For outreach_math: use REALISTIC conversion rates for THIS specific market (${icp?.industry ?? "B2B"} / ${icp?.sub_niche ?? ""}). Adjust open rates, reply rates, and positive response rates based on the industry norms, persona seniority, and outreach channel. Recalculate all numbers accordingly — do NOT use the placeholder numbers above.`;
 
   try {
