@@ -139,7 +139,8 @@ export default function StepStrategy({
       {/* Offers */}
       {offers.length > 0 && (
         <div>
-          <h3 className="text-sm font-semibold text-[#a0a0c0] uppercase tracking-wider mb-3">Compelling Offers</h3>
+          <h3 className="text-sm font-semibold text-[#a0a0c0] uppercase tracking-wider mb-1">YES-Driven Offers</h3>
+          <p className="text-xs text-[#555] mb-3">Low-friction, tangible, specific — designed to get an instant yes.</p>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {offers.map((o: any, i: number) => (
               <Card key={i}>
@@ -151,6 +152,12 @@ export default function StepStrategy({
                 </div>
                 <p className="font-semibold text-[#e8e8f2] mt-2 mb-1">{o.name}</p>
                 <p className="text-xs text-[#a0a0c0] mb-3">{o.description}</p>
+                {o.yes_driver && (
+                  <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg px-3 py-2 mb-3">
+                    <p className="text-xs text-yellow-400 font-semibold mb-0.5">Why they say YES</p>
+                    <p className="text-xs text-yellow-300">{o.yes_driver}</p>
+                  </div>
+                )}
                 <p className="text-xs text-[#6060a0] mb-3">Expected: {o.expected_conversion}</p>
                 {o.cta && (
                   <div className="bg-[#080810] rounded-lg px-3 py-2 flex items-start justify-between gap-2">
@@ -167,13 +174,20 @@ export default function StepStrategy({
       {/* Lead Magnets */}
       {lead_magnets.length > 0 && (
         <div>
-          <h3 className="text-sm font-semibold text-[#a0a0c0] uppercase tracking-wider mb-3">Lead Magnets</h3>
+          <h3 className="text-sm font-semibold text-[#a0a0c0] uppercase tracking-wider mb-1">High-Value Lead Magnets</h3>
+          <p className="text-xs text-[#555] mb-3">Done-for-you assets, verified lists, live teardowns — things they actually want.</p>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {lead_magnets.map((lm: any, i: number) => (
               <Card key={i}>
                 <Tag color="orange">{lm.format}</Tag>
                 <p className="font-semibold text-[#e8e8f2] mt-2 mb-1">{lm.name}</p>
                 <p className="text-xs text-[#a0a0c0] mb-2">{lm.description}</p>
+                {lm.why_they_want_it_now && (
+                  <div className="bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2 mb-2">
+                    <p className="text-xs text-red-400 font-semibold mb-0.5">Why they want this NOW</p>
+                    <p className="text-xs text-red-300">{lm.why_they_want_it_now}</p>
+                  </div>
+                )}
                 <p className="text-xs text-[#6060a0] mb-1">{lm.value_proposition}</p>
                 <p className="text-xs text-blue-400 mt-2 mb-3">↳ {lm.delivery}</p>
                 {lm.email_sequence?.length > 0 && (

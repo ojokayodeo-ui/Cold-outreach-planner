@@ -63,9 +63,27 @@ Primary persona: ${personas[0]?.title ?? "decision-maker"} — pain: ${personas[
 CRITICAL: Never use double-quote characters inside string values (use apostrophes instead). No trailing commas. No raw newlines inside strings.`;
 
   // Split into two parallel calls to keep each output small and reliable
-  const prompt1 = `You are a world-class B2B cold outreach strategist.
+  const prompt1 = `You are a world-class B2B cold outreach strategist and direct response copywriter. You understand offer psychology at a deep level.
 
 ${context_block}
+
+OFFER PSYCHOLOGY — MANDATORY RULES:
+A YES-driven offer has ALL of these:
+1. SPECIFICITY: "Free 100-prospect lead list for [industry] in [city]" beats "free resources". Name exact numbers, deliverables, timeframes.
+2. IMMEDIATE TANGIBLE VALUE: They can use it TODAY without scheduling a call. A list, a doc, a report, a done-for-them asset.
+3. ZERO RISK: No credit card, no commitment, no obligation. Remove ALL friction.
+4. PROVES YOUR CAPABILITY: The freebie demonstrates exactly what you do — getting it makes them want the paid version.
+5. CURIOSITY + LOSS AVERSION: It reveals something they are currently MISSING or LOSING. Not just useful — revealing.
+6. DONE-FOR-THEM > TEMPLATES: A pre-built asset tailored to them ("I built this for you") beats a generic template they have to fill in.
+
+LEAD MAGNET EXCELLENCE — MANDATORY RULES:
+Great lead magnets are SPECIFIC, TANGIBLE, and IMMEDIATELY USABLE:
+- "100 verified decision-maker contacts in [niche] with LinkedIn URLs" (done-for-them list)
+- "5 cold email sequences written for your exact offer, ready to send" (done-for-them copy)
+- "Your competitor [X]'s exact acquisition strategy — reverse-engineered" (intelligence they can not get elsewhere)
+- "Live audit of your current outreach: I will record a Loom showing exactly what is broken and how to fix it"
+- "The 7 objections [persona title]s give and the exact word-for-word responses that close them"
+- NOT: "Cold outreach guide", "Lead gen checklist", "Strategy template" — these are boring and generic
 
 ${jsonRules}
 
@@ -78,49 +96,51 @@ ${jsonRules}
       "why_it_works": "Specific reason for THIS market",
       "when_to_use": "Exact situation that makes this optimal",
       "effectiveness_score": 8,
-      "sample_hook": "The actual hook line to use",
+      "sample_hook": "The actual hook line to use — specific, sharp, no fluff",
       "subject_line_example": "Email subject using this angle",
       "recommended": true,
       "psychological_principle": "Loss Aversion|Social Proof|FOMO|Scarcity|Authority|Curiosity Gap|Reciprocity|Pain Amplification",
-      "urgency_mechanism": "Why this prospect should act THIS month, not next quarter — specific market/competitive/personal reason"
+      "urgency_mechanism": "Why this prospect should act THIS month, not next quarter — specific market/competitive/seasonal reason"
     }
   ],
   "recommended_angles": ["Name 1", "Name 2"],
   "offers": [
     {
-      "name": "Offer name",
-      "type": "audit|report|tool|consultation|trial|checklist|assessment",
-      "description": "What they get and why it is valuable — must be easy to say yes to",
+      "name": "Offer name — be specific (e.g. '15-Minute Cold Email Teardown' not 'Free Audit')",
+      "type": "done-for-you|audit|live-review|list|report|assessment|quick-win",
+      "description": "Exactly what they receive, in concrete terms. Name the deliverable, the format, the timeframe.",
+      "yes_driver": "The ONE psychological reason this gets a YES instantly — what do they lose by saying no?",
       "friction_level": "low",
-      "expected_conversion": "e.g. 8-12% reply rate",
-      "cta": "The exact CTA sentence — soft, no-pressure ask"
+      "expected_conversion": "Realistic reply rate for this market",
+      "cta": "The exact CTA sentence — make it feel like a no-brainer, not a commitment"
     }
   ],
   "lead_magnets": [
     {
-      "name": "Lead magnet name",
-      "format": "PDF|spreadsheet|video|audit|calculator|template|checklist",
-      "description": "What it contains and who it is for",
-      "value_proposition": "Why this persona would want it",
-      "delivery": "How to deliver it",
+      "name": "Lead magnet name — specific and exciting (e.g. '100 Verified [Niche] Decision-Maker Contacts')",
+      "format": "done-for-you list|live audit|recorded teardown|custom report|ready-to-send sequences|intelligence brief",
+      "description": "Exactly what is inside — be specific. Numbers, names, deliverables.",
+      "why_they_want_it_now": "The urgency/loss reason they want this immediately, not next week",
+      "value_proposition": "What problem this solves and what result they get from using it",
+      "delivery": "How and how fast they receive it",
       "email_sequence": [
         {
           "step": 1,
-          "timing": "Instant - on download",
-          "subject": "Subject line for delivery email",
-          "body": "Short 3-4 sentence delivery email. Deliver the resource, set expectation for follow-up."
+          "timing": "Instant delivery",
+          "subject": "Punchy delivery subject — reference the specific thing they requested",
+          "body": "3-4 sentences. Deliver the resource. Name one specific thing inside that will surprise them. Tell them what to do with it right now."
         },
         {
           "step": 2,
           "timing": "Day 3",
-          "subject": "Follow-up subject line",
-          "body": "2-3 sentences. Ask if they reviewed it. Share one specific insight."
+          "subject": "Follow-up — reference what they got",
+          "body": "2-3 sentences. Ask one specific question about what they found. Share a surprising stat or insight related to what they received."
         },
         {
           "step": 3,
           "timing": "Day 7",
-          "subject": "Value-add subject line",
-          "body": "2-3 sentences. Share a related tip. Soft CTA to book a call or reply."
+          "subject": "Add more value — give something else useful",
+          "body": "2-3 sentences. Share one actionable tip they can use today. Soft CTA — reply or book — zero pressure."
         }
       ]
     }
@@ -142,8 +162,7 @@ ${jsonRules}
   ]
 }
 
-Generate 10 angles (diverse: pain, opportunity, competitor, curiosity, data, authority — each with a DIFFERENT psychological_principle), 6 offers (ALL must be low friction — no discovery calls, no demos, no hard sells — think free audits, templates, assessments, quick wins, value-first consultations), 6 lead magnets each with a full 3-step email_sequence, all 5 funnel stages.
-For outreach_math: use REALISTIC conversion rates for THIS market (${icp?.industry ?? "B2B"} / ${icp?.sub_niche ?? ""}).`;
+Generate 10 angles (diverse types — each using a DIFFERENT psychological_principle), 6 offers (ALL low friction, ALL specific and tangible, ALL YES-driven — apply the offer psychology rules above strictly), 6 lead magnets (ALL specific and exciting — done-for-you assets, intelligence briefs, verified lists, live teardowns — NOT generic PDFs or checklists), all 5 funnel stages.`;
 
   const prompt2 = `You are a world-class B2B cold outreach strategist.
 

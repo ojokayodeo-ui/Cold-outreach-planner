@@ -184,6 +184,8 @@ CAMPAIGN ANGLE: "${angle?.name ?? "pain-based"}" (${angle?.type ?? "pain"})
 - Urgency mechanism: ${angle?.urgency_mechanism ?? ""}
 
 OFFER: "${offer?.name ?? "free strategy call"}"
+- Description: ${offer?.description ?? ""}
+- Why they say YES: ${offer?.yes_driver ?? ""}
 - CTA: ${offer?.cta ?? "Worth a 20-min call to explore this?"}
 
 Write the full 5-email sequence and all additional deliverables now.`;
