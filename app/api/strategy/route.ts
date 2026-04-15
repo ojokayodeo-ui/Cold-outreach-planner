@@ -11,7 +11,7 @@ function cleanJson(raw: string): string {
   return s;
 }
 
-async function claude(prompt: string, maxTokens = 16000): Promise<string> {
+async function claude(prompt: string, maxTokens = 10000): Promise<string> {
   const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: {
@@ -44,21 +44,24 @@ export async function POST(req: NextRequest) {
   const icp = icpPersonas?.icp;
   const personas = icpPersonas?.personas ?? [];
 
-  const prompt = `You are a world-class B2B cold outreach and customer acquisition strategist.
-
-Build a complete go-to-market strategy covering: outreach angles, offers, acquisition funnel, competitor intelligence, and add-on services.
-
-Target: "${target}"
+  const context_block = `Target: "${target}"
 ${context ? `Seller: "${context}"` : ""}
 ${geography && geography !== "Global" ? `Geography: ${geography}` : ""}
 ICP: ${icp?.industry ?? ""} / ${icp?.sub_niche ?? ""}, ${icp?.company_size ?? ""}
 Top pain points: ${research?.pain_points?.slice(0, 4).join("; ") ?? ""}
 Competitors in market: ${(research?.competitors ?? []).slice(0, 3).map((c: any) => c.name).join(", ")}
 Overused messaging to avoid: ${research?.common_messaging?.slice(0, 3).join("; ") ?? ""}
-Primary persona: ${personas[0]?.title ?? "decision-maker"} — pain: ${personas[0]?.pain_points?.[0] ?? ""}
+Primary persona: ${personas[0]?.title ?? "decision-maker"} — pain: ${personas[0]?.pain_points?.[0] ?? ""}`;
 
-Return ONLY valid JSON — no markdown, no code fences, no explanation.
-CRITICAL JSON RULES: Never use double-quote characters inside string values (use apostrophes instead). No trailing commas. No raw newlines inside strings.
+  const jsonRules = `Return ONLY valid JSON — no markdown, no code fences, no explanation.
+CRITICAL: Never use double-quote characters inside string values (use apostrophes instead). No trailing commas. No raw newlines inside strings.`;
+
+  // Split into two parallel calls to keep each output small and reliable
+  const prompt1 = `You are a world-class B2B cold outreach strategist.
+
+${context_block}
+
+${jsonRules}
 
 {
   "angles": [
@@ -79,9 +82,9 @@ CRITICAL JSON RULES: Never use double-quote characters inside string values (use
     {
       "name": "Offer name",
       "type": "service|audit|report|tool|consultation|trial",
-      "description": "What they get and why it's valuable",
+      "description": "What they get and why it is valuable",
       "friction_level": "low|medium|high",
-      "expected_conversion": "e.g. 8–12% reply rate",
+      "expected_conversion": "e.g. 8-12% reply rate",
       "cta": "The exact CTA sentence to use in email"
     }
   ],
@@ -89,27 +92,27 @@ CRITICAL JSON RULES: Never use double-quote characters inside string values (use
     {
       "name": "Lead magnet name",
       "format": "PDF|spreadsheet|video|audit|calculator|template|checklist",
-      "description": "What it contains and who it's for",
+      "description": "What it contains and who it is for",
       "value_proposition": "Why this persona would want it",
       "delivery": "How to deliver it",
       "email_sequence": [
         {
           "step": 1,
-          "timing": "Instant — on download",
+          "timing": "Instant - on download",
           "subject": "Subject line for delivery email",
-          "body": "Short 3-4 sentence delivery email body. Deliver the resource, set expectation for follow-up."
+          "body": "Short 3-4 sentence delivery email. Deliver the resource, set expectation for follow-up."
         },
         {
           "step": 2,
           "timing": "Day 3",
           "subject": "Follow-up subject line",
-          "body": "2-3 sentence check-in. Ask if they had a chance to review it. Share one specific insight from the resource."
+          "body": "2-3 sentences. Ask if they reviewed it. Share one specific insight."
         },
         {
           "step": 3,
           "timing": "Day 7",
           "subject": "Value-add subject line",
-          "body": "2-3 sentences. Share a related tip or case study. Soft CTA to book a call or reply."
+          "body": "2-3 sentences. Share a related tip. Soft CTA to book a call or reply."
         }
       ]
     }
@@ -118,52 +121,32 @@ CRITICAL JSON RULES: Never use double-quote characters inside string values (use
     {
       "stage": "Awareness",
       "objective": "Get on their radar with a relevant insight",
-      "primary_message": "The core message/angle for this stage",
-      "cta": "Low-friction CTA for this stage",
+      "primary_message": "Core message for this stage",
+      "cta": "Low-friction CTA",
       "channels": ["Cold email", "LinkedIn"],
       "content_ideas": ["Specific content that works here"],
-      "offers_at_stage": ["Free resource", "Value-first content"]
+      "offers_at_stage": ["Free resource"]
     },
-    {
-      "stage": "Interest",
-      "objective": "...",
-      "primary_message": "...",
-      "cta": "...",
-      "channels": ["..."],
-      "content_ideas": ["..."],
-      "offers_at_stage": ["..."]
-    },
-    {
-      "stage": "Consideration",
-      "objective": "...",
-      "primary_message": "...",
-      "cta": "...",
-      "channels": ["..."],
-      "content_ideas": ["..."],
-      "offers_at_stage": ["..."]
-    },
-    {
-      "stage": "Decision",
-      "objective": "...",
-      "primary_message": "...",
-      "cta": "...",
-      "channels": ["..."],
-      "content_ideas": ["..."],
-      "offers_at_stage": ["..."]
-    },
-    {
-      "stage": "Fulfillment & Retention",
-      "objective": "...",
-      "primary_message": "...",
-      "cta": "...",
-      "channels": ["..."],
-      "content_ideas": ["..."],
-      "offers_at_stage": ["..."]
-    }
-  ],
+    { "stage": "Interest", "objective": "...", "primary_message": "...", "cta": "...", "channels": ["..."], "content_ideas": ["..."], "offers_at_stage": ["..."] },
+    { "stage": "Consideration", "objective": "...", "primary_message": "...", "cta": "...", "channels": ["..."], "content_ideas": ["..."], "offers_at_stage": ["..."] },
+    { "stage": "Decision", "objective": "...", "primary_message": "...", "cta": "...", "channels": ["..."], "content_ideas": ["..."], "offers_at_stage": ["..."] },
+    { "stage": "Fulfillment & Retention", "objective": "...", "primary_message": "...", "cta": "...", "channels": ["..."], "content_ideas": ["..."], "offers_at_stage": ["..."] }
+  ]
+}
+
+Generate 10 angles (diverse: pain, opportunity, competitor, curiosity, data, authority), 6 offers, 6 lead magnets each with a full 3-step email_sequence, all 5 funnel stages.
+For outreach_math: use REALISTIC conversion rates for THIS market (${icp?.industry ?? "B2B"} / ${icp?.sub_niche ?? ""}).`;
+
+  const prompt2 = `You are a world-class B2B cold outreach strategist.
+
+${context_block}
+
+${jsonRules}
+
+{
   "competitor_offers": [
     {
-      "competitor_type": "Type of competitor (e.g. 'Large generalist agency')",
+      "competitor_type": "Type of competitor (e.g. Large generalist agency)",
       "typical_offer": "What they typically offer prospects",
       "pricing_model": "How they typically charge",
       "messaging_angle": "What angle they lead with",
@@ -173,9 +156,9 @@ CRITICAL JSON RULES: Never use double-quote characters inside string values (use
   "competitor_messaging": [
     {
       "message_type": "Cold email / LinkedIn DM / Ad copy",
-      "competitor_copy": "Realistic full example of what competitors send — actual words they use (3-5 sentences)",
+      "competitor_copy": "Realistic full example of what competitors send (3-5 sentences)",
       "why_it_underperforms": "What makes this ineffective or generic",
-      "your_alternative": "A stronger full version that stands out (3-5 sentences)"
+      "your_alternative": "A stronger version that stands out (3-5 sentences)"
     }
   ],
   "addon_services": [
@@ -184,7 +167,7 @@ CRITICAL JSON RULES: Never use double-quote characters inside string values (use
       "when_to_offer": "e.g. After first successful campaign / Month 3",
       "description": "What it includes",
       "value_prop": "Why existing clients want this",
-      "revenue_potential": "e.g. +£1,500/mo per client"
+      "revenue_potential": "e.g. +1500/mo per client"
     }
   ],
   "outreach_math": {
@@ -201,7 +184,7 @@ CRITICAL JSON RULES: Never use double-quote characters inside string values (use
         "effective_rate_pct": 0.28,
         "weekly_reach_needed": 3572,
         "daily_reach_needed": 510,
-        "math_breakdown": "50 positive responses ÷ 35% positive rate = 143 replies needed ÷ 4% reply rate = 3,572 emails/week"
+        "math_breakdown": "50 positive responses divided by 35% positive rate = 143 replies needed divided by 4% reply rate = 3572 emails/week"
       },
       {
         "name": "LinkedIn Outreach",
@@ -211,7 +194,7 @@ CRITICAL JSON RULES: Never use double-quote characters inside string values (use
         "effective_rate_pct": 0.9,
         "weekly_reach_needed": 1111,
         "daily_reach_needed": 159,
-        "math_breakdown": "50 positive responses ÷ 45% positive rate = 112 replies needed ÷ 10% reply rate = 1,112 connection requests/week"
+        "math_breakdown": "50 positive responses divided by 45% positive rate = 112 replies needed divided by 10% reply rate = 1112 connection requests/week"
       }
     ],
     "recommended_mix": {
@@ -226,19 +209,20 @@ CRITICAL JSON RULES: Never use double-quote characters inside string values (use
     "assumptions": [
       "Personalised, research-backed outreach (not spray-and-pray)",
       "Targeted list with verified decision-maker contacts",
-      "Follow-up sequence of 3–5 touches per prospect",
+      "Follow-up sequence of 3-5 touches per prospect",
       "Compelling offer with clear value proposition"
     ]
   }
 }
 
-Generate 10 angles (diverse mix of types: pain, opportunity, competitor, curiosity, data, authority), 6 offers, 6 lead magnets (each with a full 3-step email_sequence), all 5 funnel stages, 6 competitor offer profiles, 6 competitor messaging examples, 3 add-on services.
-For outreach_math: use REALISTIC conversion rates for THIS specific market (${icp?.industry ?? "B2B"} / ${icp?.sub_niche ?? ""}). Adjust open rates, reply rates, and positive response rates based on the industry norms, persona seniority, and outreach channel. Recalculate all numbers accordingly — do NOT use the placeholder numbers above.`;
+Generate 6 competitor offer profiles, 6 competitor messaging examples, 3 add-on services.
+For outreach_math: use REALISTIC conversion rates for THIS market (${icp?.industry ?? "B2B"} / ${icp?.sub_niche ?? ""}). Recalculate all numbers accordingly.`;
 
   try {
-    const raw = await claude(prompt);
-    const data = JSON.parse(cleanJson(raw));
-    return NextResponse.json(data);
+    const [raw1, raw2] = await Promise.all([claude(prompt1), claude(prompt2)]);
+    const data1 = JSON.parse(cleanJson(raw1));
+    const data2 = JSON.parse(cleanJson(raw2));
+    return NextResponse.json({ ...data1, ...data2 });
   } catch (err: any) {
     console.error("Strategy failed:", err);
     return NextResponse.json({ error: err.message ?? "Failed to generate strategy" }, { status: 500 });
