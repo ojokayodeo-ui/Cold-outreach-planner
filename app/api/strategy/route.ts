@@ -89,11 +89,11 @@ ${jsonRules}
   "offers": [
     {
       "name": "Offer name",
-      "type": "service|audit|report|tool|consultation|trial",
-      "description": "What they get and why it is valuable",
-      "friction_level": "low|medium|high",
+      "type": "audit|report|tool|consultation|trial|checklist|assessment",
+      "description": "What they get and why it is valuable — must be easy to say yes to",
+      "friction_level": "low",
       "expected_conversion": "e.g. 8-12% reply rate",
-      "cta": "The exact CTA sentence to use in email"
+      "cta": "The exact CTA sentence — soft, no-pressure ask"
     }
   ],
   "lead_magnets": [
@@ -142,7 +142,7 @@ ${jsonRules}
   ]
 }
 
-Generate 10 angles (diverse: pain, opportunity, competitor, curiosity, data, authority — each with a DIFFERENT psychological_principle), 6 offers, 6 lead magnets each with a full 3-step email_sequence, all 5 funnel stages.
+Generate 10 angles (diverse: pain, opportunity, competitor, curiosity, data, authority — each with a DIFFERENT psychological_principle), 6 offers (ALL must be low friction — no discovery calls, no demos, no hard sells — think free audits, templates, assessments, quick wins, value-first consultations), 6 lead magnets each with a full 3-step email_sequence, all 5 funnel stages.
 For outreach_math: use REALISTIC conversion rates for THIS market (${icp?.industry ?? "B2B"} / ${icp?.sub_niche ?? ""}).`;
 
   const prompt2 = `You are a world-class B2B cold outreach strategist.

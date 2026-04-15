@@ -56,7 +56,7 @@ export default function StepStrategy({
   const {
     angles = [],
     recommended_angles = [],
-    offers = [],
+    offers: allOffers = [],
     lead_magnets = [],
     funnel = [],
     competitor_offers = [],
@@ -64,6 +64,7 @@ export default function StepStrategy({
     addon_services = [],
     outreach_math = null,
   } = data;
+  const offers = allOffers.filter((o: any) => o.friction_level === "low" || o.friction_level === "soft");
 
   return (
     <div className="space-y-6 animate-fade-in">
