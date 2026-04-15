@@ -33,6 +33,7 @@ function loadSession() {
 export default function ColdOutreachApp() {
   const [step, setStep] = useState<number>(() => loadSession().step ?? 0);
   const [loading, setLoading] = useState(false);
+  const [prefetching, setPrefetching] = useState<"icp" | "strategy" | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showProspect, setShowProspect] = useState(false);
 
@@ -84,6 +85,44 @@ export default function ColdOutreachApp() {
     return data;
   }
 
+  // Silent background prefetch — doesn't set loading or change step
+  async function prefetchICP(researchData: any) {
+    setPrefetching("icp");
+    try {
+      const data = await callAPI("/api/icp", {
+        target: input.target,
+        context: input.context,
+        geography: input.geography,
+        research: researchData,
+      });
+      setIcpData(data);
+      // Immediately kick off strategy prefetch once ICP is ready
+      prefetchStrategy(researchData, data);
+    } catch {
+      // silent — user can still click Next manually
+    } finally {
+      setPrefetching(prev => prev === "icp" ? null : prev);
+    }
+  }
+
+  async function prefetchStrategy(researchData: any, icpDataArg: any) {
+    setPrefetching("strategy");
+    try {
+      const data = await callAPI("/api/strategy", {
+        target: input.target,
+        context: input.context,
+        geography: input.geography,
+        research: researchData,
+        icpPersonas: icpDataArg,
+      });
+      setStrategy(data);
+    } catch {
+      // silent — user can still click Next manually
+    } finally {
+      setPrefetching(prev => prev === "strategy" ? null : prev);
+    }
+  }
+
   async function generateResearch() {
     setLoading(true);
     setError(null);
@@ -96,6 +135,8 @@ export default function ColdOutreachApp() {
       });
       setResearch(data);
       setStep(1);
+      // Start building ICP in background while user reads research
+      prefetchICP(data);
     } catch (e: any) {
       setError(e.message);
     } finally {
@@ -104,6 +145,8 @@ export default function ColdOutreachApp() {
   }
 
   async function generateICP() {
+    // Already prefetched — just advance the step
+    if (icpData) { setStep(2); return; }
     setLoading(true);
     setError(null);
     try {
@@ -115,6 +158,7 @@ export default function ColdOutreachApp() {
       });
       setIcpData(data);
       setStep(2);
+      prefetchStrategy(research, data);
     } catch (e: any) {
       setError(e.message);
     } finally {
@@ -123,6 +167,8 @@ export default function ColdOutreachApp() {
   }
 
   async function generateStrategy() {
+    // Already prefetched — just advance the step
+    if (strategy) { setStep(3); return; }
     setLoading(true);
     setError(null);
     try {
@@ -318,6 +364,7 @@ export default function ColdOutreachApp() {
               <StepResearch
                 data={research}
                 target={input.target}
+                prefetching={prefetching === "icp"}
                 onNext={generateICP}
                 loading={loading}
               />

@@ -5,6 +5,7 @@ import { Card, CopyButton, SectionHeader, Tag, PrimaryButton } from "./ui";
 interface Props {
   data: any;
   target: string;
+  prefetching?: boolean;
   onNext: () => void;
   loading: boolean;
 }
@@ -345,7 +346,7 @@ function CompetitorCard({ c, index }: { c: any; index: number }) {
 }
 
 // ── Main component ───────────────────────────────────────────────────────────
-export default function StepResearch({ data, target, onNext, loading }: Props) {
+export default function StepResearch({ data, target, prefetching, onNext, loading }: Props) {
   if (!data) return null;
   const {
     market_overview: mo,
@@ -628,7 +629,12 @@ export default function StepResearch({ data, target, onNext, loading }: Props) {
           ↓ Download Full Report as PDF
         </button>
         <PrimaryButton onClick={onNext} disabled={loading}>
-          {loading ? "Generating ICP..." : "Generate ICP & Personas →"}
+          {loading ? "Generating ICP..." : prefetching ? (
+            <span className="flex items-center gap-2">
+              <span className="w-3 h-3 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+              Pre-loading ICP...
+            </span>
+          ) : "Generate ICP & Personas →"}
         </PrimaryButton>
       </div>
     </div>
