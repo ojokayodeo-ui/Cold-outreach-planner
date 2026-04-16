@@ -15,16 +15,13 @@ interface Props {
 }
 
 const angleColors: Record<string, { border: string; badge: string; text: string }> = {
-  pain:         { border: "border-l-red-500/70",    badge: "red",    text: "text-red-400" },
-  opportunity:  { border: "border-l-green-500/70",  badge: "green",  text: "text-green-400" },
-  competitor:   { border: "border-l-purple-500/70", badge: "purple", text: "text-purple-400" },
-  curiosity:    { border: "border-l-orange-500/70", badge: "orange", text: "text-orange-400" },
-  data:         { border: "border-l-blue-500/70",   badge: "blue",   text: "text-blue-400" },
-  authority:    { border: "border-l-yellow-500/70", badge: "yellow", text: "text-yellow-400" },
-  "social proof":{ border: "border-l-teal-500/70",  badge: "blue",   text: "text-teal-400" },
-  urgency:      { border: "border-l-red-400/70",    badge: "red",    text: "text-red-300" },
-  outcome:      { border: "border-l-green-400/70",  badge: "green",  text: "text-green-300" },
-  reframe:      { border: "border-l-violet-500/70", badge: "purple", text: "text-violet-400" },
+  pain:        { border: "border-l-red-500/70",   badge: "red",   text: "text-red-400" },
+  opportunity: { border: "border-l-green-500/70", badge: "green", text: "text-green-400" },
+  // fallback for any legacy types
+  competitor:  { border: "border-l-red-500/50",   badge: "red",   text: "text-red-300" },
+  curiosity:   { border: "border-l-green-500/50", badge: "green", text: "text-green-300" },
+  data:        { border: "border-l-red-400/50",   badge: "red",   text: "text-red-300" },
+  authority:   { border: "border-l-green-400/50", badge: "green", text: "text-green-300" },
 };
 
 const frictionBadge: Record<string, string> = {
@@ -86,7 +83,8 @@ export default function StepStrategy({
 
       {/* Angle Cards */}
       <div>
-        <h3 className="text-sm font-semibold text-[#a0a0c0] uppercase tracking-wider mb-3">10 Campaign Angles</h3>
+        <h3 className="text-sm font-semibold text-[#a0a0c0] uppercase tracking-wider mb-1">10 Campaign Angles</h3>
+        <p className="text-xs text-[#555] mb-3">Pain and opportunity only — all scored 9 or 10/10 for this market.</p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {angles.map((a: any, i: number) => {
             const colors = angleColors[a.type] ?? angleColors.data;

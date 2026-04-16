@@ -91,15 +91,15 @@ ${jsonRules}
   "angles": [
     {
       "name": "Angle name",
-      "type": "pain|opportunity|competitor|curiosity|data|authority",
-      "description": "What this angle does and why it resonates",
-      "why_it_works": "Specific reason for THIS market",
-      "when_to_use": "Exact situation that makes this optimal",
-      "effectiveness_score": 8,
-      "sample_hook": "The actual hook line to use — specific, sharp, no fluff",
-      "subject_line_example": "Email subject using this angle",
+      "type": "pain|opportunity",
+      "description": "What this angle does and why it resonates with this specific market",
+      "why_it_works": "Specific reason for THIS market — name the exact pain or opportunity being exploited",
+      "when_to_use": "Exact situation that makes this the strongest possible angle",
+      "effectiveness_score": 9,
+      "sample_hook": "The actual hook line to use — specific, sharp, no fluff, written for THIS persona",
+      "subject_line_example": "Email subject using this angle — curiosity or specificity, no spam triggers",
       "recommended": true,
-      "psychological_principle": "Loss Aversion|Social Proof|FOMO|Scarcity|Authority|Curiosity Gap|Reciprocity|Pain Amplification",
+      "psychological_principle": "Loss Aversion|Social Proof|FOMO|Scarcity|Pain Amplification|Reciprocity|Curiosity Gap|Identity",
       "urgency_mechanism": "Why this prospect should act THIS month, not next quarter — specific market/competitive/seasonal reason"
     }
   ],
@@ -162,7 +162,9 @@ ${jsonRules}
   ]
 }
 
-Generate 10 angles (diverse types — each using a DIFFERENT psychological_principle), 6 offers (ALL low friction, ALL specific and tangible, ALL YES-driven — apply the offer psychology rules above strictly), 6 lead magnets (ALL specific and exciting — done-for-you assets, intelligence briefs, verified lists, live teardowns — NOT generic PDFs or checklists), all 5 funnel stages.`;
+Generate 10 angles — ALL must be type "pain" or "opportunity" ONLY (no curiosity, no authority, no competitor, no data angles). ALL must have effectiveness_score of 9 or 10 — if an angle is not at least a 9/10 for this specific market, do not include it, replace it with one that is. Each angle must use a DIFFERENT psychological_principle. Make every sample_hook and subject_line_example razor-sharp and written specifically for the persona and market above.
+
+Generate 6 offers (ALL low friction, ALL specific and tangible, ALL YES-driven — apply the offer psychology rules above strictly), 6 lead magnets (ALL specific and exciting — done-for-you assets, intelligence briefs, verified lists, live teardowns — NOT generic PDFs or checklists), all 5 funnel stages.`;
 
   const prompt2 = `You are a world-class B2B cold outreach strategist.
 
