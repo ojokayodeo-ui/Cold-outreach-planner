@@ -247,11 +247,93 @@ ${jsonRules}
 Generate 6 competitor offer profiles, 6 competitor messaging examples, 3 add-on services.
 For outreach_math: use REALISTIC conversion rates for THIS market (${icp?.industry ?? "B2B"} / ${icp?.sub_niche ?? ""}). Recalculate all numbers accordingly.`;
 
+  const prompt3 = `You are a world-class full-stack marketing strategist who builds complete go-to-market systems across every distribution channel.
+
+${context_block}
+
+${jsonRules}
+
+Generate a comprehensive multi-channel marketing strategy tailored specifically to this market and ICP — not generic advice.
+
+{
+  "channel_strategy": [
+    {
+      "channel": "e.g. LinkedIn Organic",
+      "tier": "primary|secondary|experimental",
+      "goal": "The specific business outcome this channel drives for this market",
+      "best_for": "What this channel does better than any other for this ICP",
+      "content_types": ["Specific content type 1 for this market", "Specific content type 2"],
+      "frequency": "e.g. 5x per week",
+      "kpis": ["KPI 1", "KPI 2", "KPI 3"],
+      "example_content": "A fully written example post, ad headline, or message for THIS specific market — not generic",
+      "estimated_monthly_budget": "e.g. Time only | $500-1,500/mo | $2,000-5,000/mo",
+      "time_to_results": "e.g. 30 days | 60-90 days | 6+ months"
+    }
+  ],
+  "content_pillars": [
+    {
+      "pillar": "Pillar name",
+      "purpose": "Why this content builds authority and trust with this specific ICP",
+      "sample_topics": ["Specific topic written for this market 1", "Specific topic 2", "Specific topic 3", "Specific topic 4"],
+      "best_channels": ["Channel 1", "Channel 2"],
+      "content_format": "e.g. Long-form LinkedIn posts + short-form video",
+      "posting_frequency": "e.g. 2x per week"
+    }
+  ],
+  "paid_ads": [
+    {
+      "platform": "e.g. Meta Ads | Google Search | LinkedIn Ads | YouTube Ads | Twitter/X Ads",
+      "ad_type": "e.g. Lead gen form | Retargeting | Search intent | Video awareness",
+      "targeting_approach": "Specific targeting parameters for this ICP — job titles, interests, behaviours, keywords",
+      "creative_angle": "The core message and emotion the ad triggers — written for this persona",
+      "cta_offer": "Which specific offer or lead magnet to pair with this ad and why",
+      "budget_recommendation": "Daily or monthly budget to test viably",
+      "expected_cpl": "Realistic cost per lead estimate for this market",
+      "timeline": "When to expect meaningful data and results"
+    }
+  ],
+  "partnership_channels": [
+    {
+      "type": "e.g. Referral partners | Podcast appearances | Newsletter sponsorships | Co-marketing | Affiliate | Strategic alliances",
+      "target_partners": "Specific types of businesses, creators, or people to partner with in this market",
+      "value_exchange": "What each side gets — be specific",
+      "outreach_approach": "The pitch angle — how to approach them and make it a no-brainer for them to say yes",
+      "expected_outcome": "Leads, brand exposure, or revenue this channel realistically generates"
+    }
+  ],
+  "marketing_roadmap": [
+    {
+      "phase": "Phase 1 — Foundation (Days 1-30)",
+      "focus": "What to build, set up, and launch in the first 30 days",
+      "channels_active": ["Channel 1", "Channel 2"],
+      "key_actions": ["Specific action 1", "Specific action 2", "Specific action 3"],
+      "success_metric": "The number or signal that tells you this phase worked"
+    },
+    {
+      "phase": "Phase 2 — Momentum (Days 31-60)",
+      "focus": "What to add, optimise, and double down on",
+      "channels_active": ["Channel 1", "Channel 2", "Channel 3"],
+      "key_actions": ["Specific action 1", "Specific action 2", "Specific action 3"],
+      "success_metric": "The number or signal that tells you this phase worked"
+    },
+    {
+      "phase": "Phase 3 — Scale (Days 61-90)",
+      "focus": "What to scale, automate, and systemise",
+      "channels_active": ["Channel 1", "Channel 2", "Channel 3", "Channel 4"],
+      "key_actions": ["Specific action 1", "Specific action 2", "Specific action 3"],
+      "success_metric": "The number or signal that tells you this phase worked"
+    }
+  ]
+}
+
+Generate: 7 channels covering the full mix (organic social, cold outreach, paid, content/SEO, community, partnerships, events/webinars — pick the 7 most relevant for this specific market and ICP), 4 content pillars with specific topics written for this market, 4 paid ad strategies on the most effective platforms for this ICP, 4 partnership channel types, and the full 3-phase 90-day roadmap. Every piece of output must be specific to the market and ICP above — no generic marketing advice.`;
+
   try {
-    const [raw1, raw2] = await Promise.all([claude(prompt1), claude(prompt2)]);
+    const [raw1, raw2, raw3] = await Promise.all([claude(prompt1), claude(prompt2), claude(prompt3)]);
     const data1 = JSON.parse(cleanJson(raw1));
     const data2 = JSON.parse(cleanJson(raw2));
-    return NextResponse.json({ ...data1, ...data2 });
+    const data3 = JSON.parse(cleanJson(raw3));
+    return NextResponse.json({ ...data1, ...data2, ...data3 });
   } catch (err: any) {
     console.error("Strategy failed:", err);
     return NextResponse.json({ error: err.message ?? "Failed to generate strategy" }, { status: 500 });

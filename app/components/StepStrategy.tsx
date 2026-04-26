@@ -45,6 +45,26 @@ const whenToOfferBadge: Record<string, string> = {
   "mid-project":     "text-yellow-400 bg-yellow-500/10 border-yellow-500/30",
 };
 
+const tierStyle: Record<string, { badge: string; dot: string }> = {
+  primary:      { badge: "text-green-400 bg-green-500/10 border-green-500/30",   dot: "bg-green-400" },
+  secondary:    { badge: "text-blue-400 bg-blue-500/10 border-blue-500/30",      dot: "bg-blue-400" },
+  experimental: { badge: "text-purple-400 bg-purple-500/10 border-purple-500/30", dot: "bg-purple-400" },
+};
+
+const platformStyle: Record<string, string> = {
+  "meta ads":      "text-blue-400 bg-blue-500/10 border-blue-500/30",
+  "google search": "text-red-400 bg-red-500/10 border-red-500/30",
+  "linkedin ads":  "text-blue-300 bg-blue-500/10 border-blue-400/30",
+  "youtube ads":   "text-red-300 bg-red-500/10 border-red-400/30",
+  "twitter/x ads": "text-slate-300 bg-slate-500/10 border-slate-400/30",
+};
+
+const roadmapStyle = [
+  { border: "border-blue-500/40",   bg: "bg-blue-500/5",   num: "bg-blue-500/20 text-blue-300",   text: "text-blue-300" },
+  { border: "border-purple-500/40", bg: "bg-purple-500/5", num: "bg-purple-500/20 text-purple-300", text: "text-purple-300" },
+  { border: "border-green-500/40",  bg: "bg-green-500/5",  num: "bg-green-500/20 text-green-300",  text: "text-green-300" },
+];
+
 export default function StepStrategy({
   data, personas, selectedPersona, selectedAngle, selectedOffer,
   onSelectPersona, onSelectAngle, onSelectOffer, onNext, loading,
@@ -60,12 +80,17 @@ export default function StepStrategy({
     competitor_messaging = [],
     addon_services = [],
     outreach_math = null,
+    channel_strategy = [],
+    content_pillars = [],
+    paid_ads = [],
+    partnership_channels = [],
+    marketing_roadmap = [],
   } = data;
   const offers = allOffers.filter((o: any) => o.friction_level === "low" || o.friction_level === "soft");
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <SectionHeader title="Campaign Strategy & Offers" />
+      <SectionHeader title="Full Marketing Strategy" subtitle="Multi-channel distribution, offers, lead magnets, paid ads, partnerships & 90-day roadmap" />
 
       {/* Recommended banner */}
       {recommended_angles.length > 0 && (
@@ -514,6 +539,245 @@ export default function StepStrategy({
               </ul>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Channel Strategy */}
+      {channel_strategy.length > 0 && (
+        <div>
+          <h3 className="text-sm font-semibold text-[#a0a0c0] uppercase tracking-wider mb-1">Full Channel Strategy</h3>
+          <p className="text-xs text-[#555] mb-3">Every distribution channel ranked by priority for this market.</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {channel_strategy.map((ch: any, i: number) => {
+              const ts = tierStyle[ch.tier?.toLowerCase()] ?? tierStyle.secondary;
+              return (
+                <Card key={i} className="border-l-4 border-l-[#1e1e35]">
+                  <div className="flex items-center justify-between mb-3">
+                    <p className="font-semibold text-[#e8e8f2]">{ch.channel}</p>
+                    <span className={`flex items-center gap-1.5 text-xs px-2.5 py-0.5 rounded-full border font-semibold ${ts.badge}`}>
+                      <span className={`w-1.5 h-1.5 rounded-full ${ts.dot}`} />
+                      {ch.tier}
+                    </span>
+                  </div>
+                  <p className="text-xs text-[#a0a0c0] mb-3">{ch.goal}</p>
+                  {ch.best_for && (
+                    <div className="bg-[#080810] border border-[#1a1a1a] rounded-lg px-3 py-2 mb-3">
+                      <p className="text-xs text-[#555] mb-0.5">Best for</p>
+                      <p className="text-xs text-[#c0c0e0]">{ch.best_for}</p>
+                    </div>
+                  )}
+                  {ch.content_types?.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mb-3">
+                      {ch.content_types.map((ct: string, j: number) => <Tag key={j} color="blue">{ct}</Tag>)}
+                    </div>
+                  )}
+                  <div className="grid grid-cols-2 gap-2 mb-3 text-xs">
+                    <div className="bg-[#080810] rounded-lg px-3 py-2">
+                      <p className="text-[#555] mb-0.5">Frequency</p>
+                      <p className="text-[#c0c0c0] font-medium">{ch.frequency}</p>
+                    </div>
+                    <div className="bg-[#080810] rounded-lg px-3 py-2">
+                      <p className="text-[#555] mb-0.5">Time to results</p>
+                      <p className="text-[#c0c0c0] font-medium">{ch.time_to_results}</p>
+                    </div>
+                  </div>
+                  {ch.example_content && (
+                    <div className="bg-blue-500/5 border border-blue-500/20 rounded-lg px-3 py-2 mb-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1">
+                          <p className="text-xs text-blue-400 font-semibold mb-1">Example content</p>
+                          <p className="text-xs text-blue-200 italic">"{ch.example_content}"</p>
+                        </div>
+                        <CopyButton text={ch.example_content} />
+                      </div>
+                    </div>
+                  )}
+                  <div className="flex items-center justify-between text-xs text-[#555]">
+                    <span>Budget: <span className="text-[#a0a0c0]">{ch.estimated_monthly_budget}</span></span>
+                  </div>
+                  {ch.kpis?.length > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-1">
+                      {ch.kpis.map((k: string, j: number) => (
+                        <span key={j} className="text-xs text-[#555] bg-[#0a0a0a] border border-[#1a1a1a] rounded-full px-2 py-0.5">{k}</span>
+                      ))}
+                    </div>
+                  )}
+                </Card>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Content Pillars */}
+      {content_pillars.length > 0 && (
+        <div>
+          <h3 className="text-sm font-semibold text-[#a0a0c0] uppercase tracking-wider mb-1">Content Pillars</h3>
+          <p className="text-xs text-[#555] mb-3">The core content themes that build authority with your ICP.</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {content_pillars.map((cp: any, i: number) => {
+              const colors = [
+                { border: "border-l-blue-500/60",   title: "text-blue-400" },
+                { border: "border-l-purple-500/60", title: "text-purple-400" },
+                { border: "border-l-orange-500/60", title: "text-orange-400" },
+                { border: "border-l-green-500/60",  title: "text-green-400" },
+              ][i % 4];
+              return (
+                <Card key={i} className={`border-l-4 ${colors.border}`}>
+                  <p className={`font-semibold mb-1 ${colors.title}`}>{cp.pillar}</p>
+                  <p className="text-xs text-[#a0a0c0] mb-3">{cp.purpose}</p>
+                  {cp.sample_topics?.length > 0 && (
+                    <ul className="space-y-1.5 mb-3">
+                      {cp.sample_topics.map((t: string, j: number) => (
+                        <li key={j} className="text-xs text-[#c0c0c0] flex gap-2">
+                          <span className={`shrink-0 mt-0.5 ${colors.title}`}>→</span>{t}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-[#1a1a1a]">
+                    {cp.best_channels?.map((ch: string, j: number) => <Tag key={j} color="blue">{ch}</Tag>)}
+                    {cp.posting_frequency && (
+                      <span className="text-xs text-[#555]">{cp.posting_frequency}</span>
+                    )}
+                  </div>
+                </Card>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Paid Ads */}
+      {paid_ads.length > 0 && (
+        <div>
+          <h3 className="text-sm font-semibold text-[#a0a0c0] uppercase tracking-wider mb-1">Paid Advertising Strategy</h3>
+          <p className="text-xs text-[#555] mb-3">Platform-specific ad strategies built for this ICP.</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {paid_ads.map((ad: any, i: number) => {
+              const platKey = (ad.platform ?? "").toLowerCase();
+              const platStyle = platformStyle[platKey] ?? "text-yellow-400 bg-yellow-500/10 border-yellow-500/30";
+              return (
+                <Card key={i} className="border-l-4 border-l-yellow-500/40">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className={`text-xs font-semibold px-2.5 py-0.5 rounded-full border ${platStyle}`}>{ad.platform}</span>
+                    <Tag color="gray">{ad.ad_type}</Tag>
+                  </div>
+                  <div className="space-y-2 text-xs mb-3">
+                    {ad.targeting_approach && (
+                      <div>
+                        <span className="text-[#555]">Targeting: </span>
+                        <span className="text-[#a0a0c0]">{ad.targeting_approach}</span>
+                      </div>
+                    )}
+                    {ad.creative_angle && (
+                      <div className="bg-yellow-500/5 border border-yellow-500/20 rounded-lg px-3 py-2">
+                        <p className="text-yellow-400 font-semibold mb-0.5">Creative angle</p>
+                        <p className="text-yellow-200 italic">"{ad.creative_angle}"</p>
+                      </div>
+                    )}
+                    {ad.cta_offer && (
+                      <div>
+                        <span className="text-[#555]">Paired offer: </span>
+                        <span className="text-green-300">{ad.cta_offer}</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 text-xs">
+                    <div className="bg-[#080810] rounded-lg px-2 py-2 text-center">
+                      <p className="text-[#555] mb-0.5">Budget</p>
+                      <p className="text-[#e0e0e0] font-semibold">{ad.budget_recommendation}</p>
+                    </div>
+                    <div className="bg-[#080810] rounded-lg px-2 py-2 text-center">
+                      <p className="text-[#555] mb-0.5">Est. CPL</p>
+                      <p className="text-[#e0e0e0] font-semibold">{ad.expected_cpl}</p>
+                    </div>
+                    <div className="bg-[#080810] rounded-lg px-2 py-2 text-center">
+                      <p className="text-[#555] mb-0.5">Timeline</p>
+                      <p className="text-[#e0e0e0] font-semibold">{ad.timeline}</p>
+                    </div>
+                  </div>
+                </Card>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Partnership Channels */}
+      {partnership_channels.length > 0 && (
+        <div>
+          <h3 className="text-sm font-semibold text-[#a0a0c0] uppercase tracking-wider mb-1">Partnership & Distribution Channels</h3>
+          <p className="text-xs text-[#555] mb-3">Leverage other people's audiences and relationships to grow faster.</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {partnership_channels.map((p: any, i: number) => (
+              <Card key={i} className="border-l-4 border-l-teal-500/50">
+                <Tag color="blue">{p.type}</Tag>
+                <p className="font-semibold text-[#e8e8f2] mt-2 mb-1">{p.target_partners}</p>
+                {p.value_exchange && (
+                  <div className="bg-teal-500/5 border border-teal-500/20 rounded-lg px-3 py-2 my-2">
+                    <p className="text-xs text-teal-400 font-semibold mb-0.5">Value exchange</p>
+                    <p className="text-xs text-teal-200">{p.value_exchange}</p>
+                  </div>
+                )}
+                {p.outreach_approach && (
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <p className="text-xs text-[#a0a0c0] italic flex-1">"{p.outreach_approach}"</p>
+                    <CopyButton text={p.outreach_approach} />
+                  </div>
+                )}
+                {p.expected_outcome && (
+                  <p className="text-xs text-green-300">↳ {p.expected_outcome}</p>
+                )}
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 90-Day Marketing Roadmap */}
+      {marketing_roadmap.length > 0 && (
+        <div>
+          <h3 className="text-sm font-semibold text-[#a0a0c0] uppercase tracking-wider mb-1">90-Day Marketing Roadmap</h3>
+          <p className="text-xs text-[#555] mb-3">What to execute in each phase to build momentum and scale.</p>
+          <div className="flex flex-col gap-4">
+            {marketing_roadmap.map((phase: any, i: number) => {
+              const s = roadmapStyle[i % 3];
+              return (
+                <div key={i} className={`rounded-xl border ${s.border} ${s.bg} p-5`}>
+                  <div className="flex items-center gap-3 mb-3">
+                    <span className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold shrink-0 ${s.num}`}>
+                      {i + 1}
+                    </span>
+                    <div>
+                      <p className={`text-sm font-semibold ${s.text}`}>{phase.phase}</p>
+                      {phase.focus && <p className="text-xs text-[#6060a0] mt-0.5">{phase.focus}</p>}
+                    </div>
+                  </div>
+                  {phase.channels_active?.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mb-3">
+                      {phase.channels_active.map((ch: string, j: number) => <Tag key={j} color="blue">{ch}</Tag>)}
+                    </div>
+                  )}
+                  {phase.key_actions?.length > 0 && (
+                    <ul className="space-y-1.5 mb-3">
+                      {phase.key_actions.map((a: string, j: number) => (
+                        <li key={j} className="flex items-start gap-2 text-xs text-[#c0c0c0]">
+                          <span className={`shrink-0 mt-0.5 font-bold ${s.text}`}>{j + 1}.</span>{a}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  {phase.success_metric && (
+                    <div className={`flex items-start gap-2 text-xs rounded-lg px-3 py-2 border ${s.border} bg-black/20`}>
+                      <span className="text-green-400 shrink-0">✓</span>
+                      <span className="text-[#a0a0c0]"><span className="text-green-400 font-semibold">Success: </span>{phase.success_metric}</span>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
 
